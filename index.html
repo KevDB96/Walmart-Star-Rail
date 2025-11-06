@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Walmart Star Rail</title>
+        <link rel="icon" href="C:\Users\Kevin\Downloads\icons8-favicon-50.png" type="image/x-icon">
+        <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+        <audio id="bgm" src=""></audio>
+        <audio id="voiceline" src=""></audio>
+        <audio id="sfx" src=""></audio>
+        <img id="background" src="zf4z6utfezua1.png">
+
+
+        <div id="music">
+                <button id="pauseMusic">Pause/Play</button>
+                <div id="volumeControl">
+                        <button id="volumeUp">^</button>
+                        <div id="volumePercent">30%</div>
+                        <button id="volumeDown">v</button>
+                </div>
+                <button id="changeMusic">Random Song</button>
+        </div>
+        <p id="totaldamage">Test</p>
+        <p id="notification">Test</p>
+        <div id="game-area">
+                <div class="enemies-container">
+                        <div class="enemy" id="enemy1-container">
+                                <div class="enemy-weakness" id="enemy1-weakness">
+                                        <img id="enemy1-weakness1" src="">
+                                        <img id="enemy1-weakness2" src="">
+                                        <img id="enemy1-weakness3" src="">
+                                </div>
+                                <img id="enemy1" class="enemy-portrait" src="">
+                                <div class="enemy-stats" id="enemy1-stats"></div>
+                        </div>
+                        <div class="enemy" id="enemy2-container">
+                                <div class="enemy-weakness" id="enemy2-weakness">
+                                        <img id="enemy2-weakness1" src="">
+                                        <img id="enemy2-weakness2" src="">
+                                        <img id="enemy2-weakness3" src="">
+                                </div>
+                                <img id="enemy2" class="enemy-portrait" src="">
+                                <div class="enemy-stats" id="enemy2-stats"></div>
+                        </div>
+                        <div class="enemy" id="enemy3-container">
+                                <div class="enemy-weakness" id="enemy3-weakness">
+                                        <img id="enemy3-weakness1" src="">
+                                        <img id="enemy3-weakness2" src="">
+                                        <img id="enemy3-weakness3" src="">
+                                </div>
+                                <img id="enemy3" class="enemy-portrait" src="">
+                                <div class="enemy-stats" id="enemy3-stats"></div>
+                        </div>
+                        <div class="enemy" id="enemy4-container">
+                                <div class="enemy-weakness" id="enemy4-weakness">
+                                        <img id="enemy4-weakness1" src="">
+                                        <img id="enemy4-weakness2" src="">
+                                        <img id="enemy4-weakness3" src="">
+                                </div>
+                                <img id="enemy4" class="enemy-portrait" src="">
+                                <div class="enemy-stats" id="enemy4-stats">
+                                </div>
+
+                        </div>
+                        <div class="enemy" id="enemy5-container">
+                                <div class="enemy-weakness" id="enemy5-weakness">
+                                        <img id="enemy5-weakness1" src="">
+                                        <img id="enemy5-weakness2" src="">
+                                        <img id="enemy5-weakness3" src="">
+                                </div>
+                                <img id="enemy5" class="enemy-portrait" src="">
+                                <div class="enemy-stats" id="enemy5-stats"></div>
+                        </div>
+                </div>
+                <div id="centertext">
+                        <p id="infotext"></p>
+                        <p id="dmgtext"></p>
+                </div>
+                <button id="start">Start</button>
+
+                <div id="abilities">
+                        <div class="buttons">
+                                <button id="basicatkbutton" title="">Basic Attack</button>
+                                <button id="skillbutton" title="">Skill</button>
+                                <button id="ultimatebutton" title="">Ultimate</button>
+                        </div>
+                        <div class="sp" title="Skill Points">
+                                <p id="currentsp">3</p>
+                                <p id="spdivider">/</p>
+                                <p id="maxsp">5</p>
+                        </div>
+                </div>
+
+                <div id="characters">
+                        <div class="character" id="char1-container">
+                                <img class="char-element" id="char1-element"></img>
+                                <img id="char1" src="">
+                                <div class="character-stats" id="char1-stats"></div>
+                        </div>
+                        <div class="character" id="char2-container">
+                                <img class="char-element" id="char2-element"></img>
+                                <img id="char2" src="">
+                                <div class="character-stats" id="char2-stats"></div>
+                        </div>
+                        <div class="character" id="char3-container">
+                                <img class="char-element" id="char3-element"></img>
+                                <img id="char3" src="">
+                                <div class="character-stats" id="char3-stats"></div>
+                        </div>
+                        <div class="character" id="char4-container">
+                                <img class="char-element" id="char4-element"></img>
+                                <img id="char4" src="">
+                                <div class="character-stats" id="char4-stats"></div>
+                        </div>
+                </div>
+        </div>
+
+        <script src="index.js"></script>
+</body>
+
+</html>

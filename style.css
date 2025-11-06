@@ -1,0 +1,196 @@
+#music {
+    position: fixed;
+    top: 10px;
+    left: 10px;
+    flex: auto;
+    flex-direction: row;
+    gap: 20px;
+    z-index: 1000;
+}
+
+#background {
+    position: fixed;    
+    top: 0;            
+    left: 0;
+    width: 100vw;       
+    height: 100vh;      
+    object-fit: cover;  
+    z-index: -9999;       
+    pointer-events: none; 
+    opacity: 0.3;        
+}
+
+body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100vh;
+    margin: 0;
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+#game-area {
+    display: flex;
+    flex-direction: column;
+    align-items: center; 
+    gap: 30px;
+    position: relative;
+}
+
+.enemies-container,
+#characters {
+    display: flex;
+    justify-content: center; 
+    flex-wrap: wrap;      
+    gap: 20px;    
+    min-height: 280px        
+}
+
+.enemy-weakness {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 4px;
+    margin-top: 4px;
+    width: auto;
+    height: auto; 
+}
+
+.enemy-weakness img {
+    width: 25px;
+    height: 25px;
+}
+
+
+.enemy > img {
+    width: 250px;     
+    max-width: 100%;
+    height: auto;
+    display: block;
+    border-radius: 10px;  
+    transition: border 0.3s ease; 
+}
+
+.enemy-targeted {
+    outline: 4px solid gold; 
+    box-shadow: 0 0 10px gold;
+}
+
+.enemy-stats {
+    font-size: 14px;
+    text-align: center;
+    margin-top: 2px;
+}
+
+
+.controls {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;      
+    margin: 20px 0; 
+}
+
+#abilities {
+    margin-right: 75px;
+    margin-bottom: 5px;
+    display: flex;
+    align-items: flex-start;
+    position: relative;
+    gap: 10px;
+}
+
+.buttons {
+    display: flex;
+    gap: 10px;
+}
+
+.sp {
+    position: absolute;
+    left: 100%; 
+    top: 50%; 
+    transform: translate(10px, -50%); 
+    display: flex;
+    gap: 2px;
+    font-weight: bold;
+    font-size: 18px;
+    color: black;
+}
+
+#text-center {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%); 
+    display: flex;
+    flex-direction: column; 
+    align-items: center;   
+    gap: 10px;             
+    text-align: center;
+    max-width: 400px;
+    z-index: 999;
+}
+
+#infotext,
+#dmgtext {
+    font-size: 22px;
+    word-wrap: break-word;
+    text-align: center;
+    width: 100%;   
+    min-height: 30px     
+}
+
+#totaldamage {
+    position: fixed;
+    top: 400px; 
+    left: 75%;  
+    transform: translateX(-75%); 
+    font-size: 48px;
+    text-align: center;
+    max-width: 400px;
+    word-wrap: break-word;
+    z-index: 999;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.8s ease-out;
+}
+
+#notification {
+    position: absolute; 
+    top: 375px;       
+    left: 65%;     
+    transform: translateX(-50%); 
+    font-size: 22px;
+    text-align: center;
+    max-width: 400px;
+    word-wrap: break-word;
+    z-index: 999;      
+    pointer-events: none; 
+    opacity: 0;                 
+    transition: opacity 0.8s ease-out; 
+}
+
+.character img {
+     width: 400px;            
+    max-width: 100%;          
+    height: auto;
+    display: block;
+      border-radius: 10px;  
+}
+
+.character-stats {
+    font-size: 14px;
+    text-align: center;
+    margin-top: 2px;
+}
+
+.char-element {
+    width: 25px;
+    height: 25px;
+    object-fit: contain; 
+    margin-bottom: 10px;
+    display: inline-block; 
+    max-width: 60px;
+    max-height: 60px;
+}
