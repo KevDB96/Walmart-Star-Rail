@@ -8,7 +8,9 @@ const skillpointscurrentdisplay = document.getElementById("currentsp");
 const spdivider = document.getElementById("spdivider");
 const skillpointmaxdisplay = document.getElementById("maxsp");
 const pauseMusicButton = document.getElementById("pauseMusic");
+let currentTurn;
 let total = 0;
+let combatOngoing = false;
 function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
@@ -26,21 +28,35 @@ let characterList = [];
 let enemyList = [];
 let targetList = [];
 let turnOrderCheck = 0;
+const debuffList = [
+    { id: "FireBreak", name: "Burn", src: "Icon_Burn.webp", description: `Take Fire damage each turn`, duration: 2, baseChance: 1.5, effect: (attacker, unit) => { unit.currentHP -= 50 * Math.pow(attacker.level, 0.95) }, element: "Fire", applier: "" },
+    { id: "PhysicalBreak", name: "Bleed", src: "Icon_Bleed.webp", description: `Take Physical damage each turn based on max HP`, duration: 2, baseChance: 1.5, effect: (attacker, unit) => { unit.currentHP -= Math.min((unit.stats.hp * 0.1), 50 * Math.pow(attacker.level, 0.95)) }, element: "Physical", applier: "" },
+    { id: "IceBreak", name: "Freeze", src: "Icon_Frozen.webp", description: `Take Ice damage each turn and stunned`, duration: 1, baseChance: 1.5, effect: (attacker, unit) => { unit.isStunned = true; { unit.currentHP -= 50 * Math.pow(attacker.level, 0.95) } }, element: "Ice", applier: "" },
+    { id: "LightningBreak", name: "Shock", src: "Icon_Shock.webp", description: `Take Lightning damage each turn`, duration: 2, baseChance: 1.5, effect: (attacker, unit) => { unit.currentHP -= 100 * Math.pow(attacker.level, 0.95) }, element: "Lightning", applier: "" },
+    { id: "WindBreak", name: "Shear", src: "Icon_Wind_Shear.webp", description: `Take Wind damage each turn`, duration: 2, stacks: 2, maxstacks: 5, baseChance: 1.5, effect: (attacker, unit) => { unit.currentHP -= stacks * 50 * Math.pow(attacker.level, 0.95); }, element: "Wind", applier: "" },
+    { id: "QuantumBreak", name: "Entangle", src: "Icon_Entanglement.webp", description: `Take Quantum damage each turn and slightly reduces speed`, duration: 2, stacks: 1, maxstacks: 5, baseChance: 1.5, effect: (attacker, unit) => { unit.currentHP -= stacks * 0.6 * 50 * Math.pow(attacker.level, 0.95); unit.speed -= (10 * attacker.breakeffect) }, revert: (attacker, unit) => { unit.speed += (20 * attacker.breakeffect) }, element: "Quantum", applier: "" },
+    { id: "ImaginaryBreak", name: "Imprison", src: "Icon_Imprisonment.webp", description: `This unit has reduced speed`, duration: 2, baseChance: 1.5, effect: (attacker, unit) => { unit.speed *= 0.8 }, revert: (attacker, unit) => { unit.speed += (20 * attacker.breakeffect) }, element: "Imaginary", applier: "" },
+    { id: "Wilt", name: "Wilt", src: "lick-enkindled-betrayal-skill_icon.webp", description: `Take Fire damage each turn and reduces defense by 20%`, duration: 3, baseChance: 2, effect: (attacker, unit) => { unit.stats.defreduction -= 0.2 }, effectdmg: (attacker, unit) => { unit.currentHP -= dealDoTDamage(attacker, unit, 1) }, revert: (attacker, unit) => { unit.stats.defreduction += 0.2 }, applier: "" },
+    { id: "Ruin", name: "Ruin", src: "wallowentombed-ash-skill_icon.webp", description: `Take Fire damage each turn and reduces defense by 20%`, duration: 3, baseChance: 2.5, effect: (attacker, unit) => { unit.stats.defreduction -= 0.2 }, effectdmg: (attacker, unit) => { unit.currentHP -= dealDoTDamage(attacker, unit, 1) }, revert: (attacker, unit) => { unit.stats.defreduction += 0.2 }, applier: "" },
+    { id: "Nihility's Command", name: "Nihility's Command", src: "internet-keyword-targeting-seo-target-icon--22.png", description: `Targeted for a massive attack and taking 10% increased damage`, duration: 1, baseChance: 1, effect: (attacker, unit) => { unit.stats.defreduction -= 0.1 }, revert: (attacker, unit) => { unit.stats.defreduction += 0.1 }, applier: "" }
+]
+    ;
+const buffList = [];
 const bgmList = [
     { name: "Scarab King", src: "Aberrant Receptacle • Starcrusher Swarm King Boss Theme (Extended) Perfect Loop- HSR Version 1.6 OST [EjCeuPEq4ro].mp3" },
     { name: "Lygus", src: "Lygus Boss Theme (Extended) - Honkai_ Star Rail 3.5 OST.mp3" },
-    { name: "Nikador", src: "Nikador Boss Battle Theme Final Battle Honkai Star Rail 3.0 OST.mp3" },
     { name: "Aquila", src: "(Extended) Proi Proi Hyacine Song - Aquila Boss Theme Phase 3Honkai Star Rail 3.3 OST.mp3" },
     { name: "Cocolia", src: "Wildfire [30 Minutes Perfect Loop] [apsyvq-DP7A].mp3" },
     { name: "Judge of Oblivion", src: "Unholy Blood Ichor Memosprite_ Judge of Oblivion Boss Theme (Extended) - Honkai_ Star Rail 3.6 OST.mp3" },
+    { name: "Irontomb", src: "Irontomb Boss Theme [Full Version] - Honkai Star Rail 3.7.mp3" }
 ];
-bgm.loop = true;
 
+bgm.loop = true;
 const elementList = [
-    { name: "Fire", img: "st,large,507x507-pad,600x600,f8f8f8.u3.jpg" },
+    { name: "Fire", img: "fire.webp" },
     { name: "Physical", img: "Type_Physical.webp" },
     { name: "Lightning", img: "Type_Lightning.png" },
-    { name: "Imaginary", img: "9b8f9a121dd836de734838c287eb4737.jpg" },
+    { name: "Imaginary", img: "Imaginary.png" },
     { name: "Quantum", img: "Type_Quantum.webp" },
     { name: "Wind", img: "Type_Wind.webp" },
     { name: "Ice", img: "Type_Ice.png" },
@@ -68,13 +84,14 @@ function onStartUp() {
     document.getElementById("basicatkbutton").disabled = true;
     document.getElementById("skillbutton").disabled = true;
     document.getElementById("ultimatebutton").disabled = true;
+    combatOngoing = true;
 
 }
 onStartUp();
 
 
 class Unit {
-    constructor({ name, img, level, affiliation, resource, resourcemax, basehp, baseatk, basedef, basespeed, hpgrowth, atkgrowth, defgrowth }) {
+    constructor({ name, img, level, affiliation, resource, resourcemax, basehp, baseatk, basedef, speed, hpgrowth, atkgrowth, defgrowth }) {
         this.name = name;
         this.img = img;
         this.level = level;
@@ -83,7 +100,7 @@ class Unit {
             hp: basehp + level * hpgrowth,
             atk: baseatk + level * atkgrowth,
             def: basedef + level * defgrowth,
-            speed: basespeed,
+            speed: speed,
             effectres: 0.05,
             defignore: 0,
             defreduction: 0,
@@ -100,11 +117,15 @@ class Unit {
             atk: atkgrowth,
             def: defgrowth
         };
+        this.buffs = [];
+        this.debuffs = [];
         this.resource = resource;
         this.resourcemax = resourcemax;
-
-        this.currentHP = this.stats.hp || 0;
+        this.currentHP = this.stats.hp;
         this.isBroken = false;
+        this.turnCount = 0;
+        this.isStunned = false;
+
     }
     get isAlive() {
         return this.currentHP > 0
@@ -118,13 +139,14 @@ class Character extends Unit {
         this.path = path;
         this.element = element;
         this.resourcemax = resourcemax;
-        this.resource = (resourcemax * 0.25);
+        this.resource = Math.ceil(resourcemax * 0.25);
         this.breakeffect = 1;
         this.stats.crrate = 0.05;
         this.stats.critDmg = 0.5;
         this.stats.resPen = 0;
         this.stats.damageBonus = 0;
         this.stats.defBonus = 0;
+        this.energyRegen = 1;
     };
 }
 
@@ -138,7 +160,7 @@ class Enemy extends Unit {
             basehp: hp,
             baseatk: atk,
             basedef: def,
-            basespeed: speed,
+            speed: speed,
             hpgrowth: hpgrowth,
             atkgrowth: atkgrowth,
             defgrowth: defgrowth
@@ -153,7 +175,7 @@ class DestructionMC extends Character {
     constructor(level) {
         super({
             name: "Trailblazer",
-            img: "honkai-star-rail-trailblazer-destroyer-best-builds.avif",
+            img: "Character_Trailblazer_(F)_Destruction_Splash_Art.png",
             level: level,
             affiliation: "Astral Express",
             star: "5*",
@@ -164,7 +186,7 @@ class DestructionMC extends Character {
             basehp: 209,
             baseatk: 99,
             basedef: 70,
-            basespeed: 102,
+            speed: 102,
             hpgrowth: 15,
             atkgrowth: 7.5,
             defgrowth: 6,
@@ -178,77 +200,82 @@ class DestructionMC extends Character {
             execute: (targets) => {
                 const target = targets[0];
                 this.basic.sfx.play();
-                    const dmg = dealDamageHP(this, target, this.basic.modifier);
-                    target.currentHP -= dmg;
-                    if (target.weaknesses.some(w => w.weakness === this.element)) {
-                        target.currenttoughness -= (10 * this.breakeffect);
-                    }
-                    this.resource = Math.min(this.resource + 10, this.resourcemax);
-                    if (sp < spmax) {
-                        sp += 1;
-                        document.getElementById("currentsp").innerText = sp;
-                    }
-                    document.getElementById("dmgtext").innerText = `${this.name} dealt ${dmg} damage to ${target.name}`;
-                    addTotalDamage(dmg);
+                const dmg = dealDamageHP(this, target, this.basic.modifier);
+                target.currentHP -= dmg;
+                if (target.weaknesses.some(w => w.weakness === this.element)) {
+                    toughnessDamage(target, (10 * this.breakeffect))
                 }
-            },
+                energyGain(this, 10);
+                if (sp < spmax) {
+                    sp += 1;
+                    document.getElementById("currentsp").innerText = sp;
+                }
+                document.getElementById("dmgtext").innerText = `${this.name} dealt ${dmg} damage to ${target.name}`;
+                addTotalDamage(dmg);
+                endBasic();
+            }
+        },
 
-        this.skill = {
-            name: "Home Run Hit",
-            description: "Deal Physical damage to one designated enemy and adjacent targets.",
-            modifier1: 1.5,
-            modifier2: 0.75,
-            sfx: "",
-            execute: (targets) => {
+            this.skill = {
+                name: "Home Run Hit",
+                description: "Deal Physical damage to one designated enemy and adjacent targets.",
+                modifier1: 1.5,
+                modifier2: 0.75,
+                sfx: new Audio("Minecraft Fall Damage (Crack) - Sound Effect (HD).mp3"),
+                execute: (targets) => {
+                    if (sp != 0) {
+                        this.skill.sfx.play();
+                        const main = targets[0];
+                        const index = enemyList.indexOf(main);
 
-                if (sp != 0) {
-                    const main = targets[0];
-                    const index = enemyList.indexOf(main);
+                        const dmgMain = dealDamageHP(this, main, this.skill.modifier1);
+                        main.currentHP -= dmgMain;
+                        if (main.weaknesses.some(w => w.weakness === this.element)) {
+                            toughnessDamage(main, (20 * this.breakeffect))
+                        }
 
-                    const dmgMain = dealDamageHP(this, main, this.skill.modifier1);
-                    main.currentHP -= dmgMain;
-                    if (main.weaknesses.some(w => w.weakness === this.element)) {
-                        main.currenttoughness -= ( 20 * this.breakeffect );
+                        const left = enemyList[index - 1];
+                        const right = enemyList[index + 1];
+                        const leftdmg = left ? dealDamageHP(this, left, this.skill.modifier2) : 0;
+                        const rightdmg = right ? dealDamageHP(this, right, this.skill.modifier2) : 0;
+                        if (left) left.currentHP -= leftdmg;
+                        if (left) { if (left.weaknesses.some(w => w.weakness === this.element)) toughnessDamage(left, (10 * this.breakeffect)) }
+                        if (right) right.currentHP -= rightdmg;
+                        if (right) if (right.weaknesses.some(w => w.weakness === this.element)) { toughnessDamage(right, (10 * this.breakeffect)) }
+                        energyGain(this, 20);
+                        addTotalDamage(dmgMain);
+                        addTotalDamage(leftdmg);
+                        addTotalDamage(rightdmg);
+                        document.getElementById("dmgtext").innerText = `${this.name} dealt ${dmgMain} damage to ${main.name} and ${(Math.ceil(dmgMain / 2))} damage to adjacent targets!`
+                        endSkill();
                     }
-
-                    const left = enemyList[index - 1];
-                    const right = enemyList[index + 1];
-                    const leftdmg = left ? dealDamageHP(this, left, this.skill.modifier2) : 0;
-                    const rightdmg = right ? dealDamageHP(this, right, this.skill.modifier2) : 0;
-                    if (left) left.currentHP -= leftdmg;
-                    if (left) { if (left.weaknesses.some(w => w.weakness === this.element)) left.currenttoughness -= ( 10 * this.breakeffect ) }
-                    if (right) right.currentHP -= rightdmg;
-                    if (right) if (right.weaknesses.some(w => w.weakness === this.element)) { right.currenttoughness -= ( 10 * this.breakeffect ) }
-                    this.resource = Math.min(this.resource + 20, this.resourcemax);
-                    addTotalDamage(dmgMain);
-                    addTotalDamage(leftdmg);
-                    addTotalDamage(rightdmg);
-                    document.getElementById("dmgtext").innerText = `${this.name} dealt ${dmgMain} damage to ${main.name} and ${(Math.ceil(dmgMain / 2))} damage to adjacent targets!`
-                }
-                else {
-                    notification.innerText = "Not enough skill points!"
-                }
-            },
-        };
+                    else {
+                        notification.innerText = "Not enough skill points!"
+                    }
+                },
+            };
 
         this.ultimate = {
             name: "Ace Player",
             description: "Deal Physical damage all enemy targets.",
             modifier: 2,
-            sfx: "",
+            sfx: new Audio("VO_JA_Stelle_Ultimate_-_Activate_Destruction_01.mp3"),
             execute: () => {
                 if (this.resource >= this.resourcemax) {
+                    flashUltimate(this);
                     enemyList.forEach(enemy => {
                         const dmg = dealDamageHP(this, enemy, this.ultimate.modifier);
                         if (enemy.weaknesses.some(w => w.weakness === this.element)) {
-                            enemy.currenttoughness -= 20;
+                            toughnessDamage(enemy, (20 * this.breakeffect))
                         }
                         enemy.currentHP -= dmg;
-                        console.log(this.resource)
-                        turnOrder[0].resource = 5;
+                        this.resource = 5;
                         addTotalDamage(dmg);
                         document.getElementById("dmgtext").innerText = `${this.name} dealt ${dmg} damage to all enemies!`
-                        console.log(this.resource)
+                        document.getElementById("ultimatebutton").disabled = true;
+                        checkDeath();
+                        updateCharacterStats();
+                        updateEnemyStats();
                     });
                 }
                 else {
@@ -259,6 +286,118 @@ class DestructionMC extends Character {
     }
 }
 
+class Constance extends Character {
+    constructor(level) {
+        super({
+            name: "Constance",
+            img: "Character_The_Dahlia_Splash_Art.webp",
+            level: level,
+            affiliation: "Annihilation Gang",
+            star: "5*",
+            path: "Nihility",
+            element: "Fire",
+            resource: 25,
+            resourcemax: 130,
+            basehp: 148,
+            baseatk: 92,
+            basedef: 82,
+            speed: 96,
+            hpgrowth: 12,
+            atkgrowth: 7.5,
+            defgrowth: 6.5,
+        });
+
+        this.basic = {
+            name: "Flickering Memory",
+            description: "Deal Fire damage to one designated enemy.",
+            modifier: 0.75,
+            sfx: new Audio("mixkit-short-fire-whoosh-1345.wav"),
+            execute: (targets) => {
+                const target = targets[0];
+                this.basic.sfx.play();
+                const dmg = dealDamage(this, target, this.basic.modifier);
+                target.currentHP -= dmg;
+                if (target.weaknesses.some(w => w.weakness === this.element)) {
+                    toughnessDamage(target, (10 * this.breakeffect))
+                }
+                energyGain(this, 100);
+                if (sp < spmax) {
+                    sp += 1;
+                    document.getElementById("currentsp").innerText = sp;
+                }
+                document.getElementById("dmgtext").innerText = `${this.name} dealt ${dmg} damage to ${target.name}`;
+                addTotalDamage(dmg);
+                endBasic();
+            }
+        },
+
+            this.skill = {
+                name: "Wilting Roses",
+                description: "Deal Fire damage to all enemies and apply 'Wilt'. If the target already has 'Wilt', allow all Damage-Over-Time effects to deal damage once",
+                modifier: 1.25,
+                sfx: new Audio("mixkit-fire-swoosh-burning-1328.wav"),
+                execute: () => {
+                    if (sp != 0) {
+                        this.skill.sfx.play();
+                        enemyList.forEach(enemy => {
+                            const dmg = dealDamage(this, enemy, this.skill.modifier)
+                            enemy.currentHP -= dmg;
+                            if (enemy.weaknesses.some(w => w.weakness === this.element)) {
+                                enemy.currenttoughness -= (20 * this.breakeffect);
+                            }
+                            if (enemy.debuffs.some(d => d.id === "Wilt")) {
+                            procDoTs(enemy);
+                        }
+                            energyGain(this, 20);
+                            addTotalDamage(dmg);
+                            applyDebuff(enemy, "Wilt", this);
+                            document.getElementById("dmgtext").innerText = `${this.name} dealt ${dmg} to all enemies`;
+                        })
+
+                    }
+                    endSkill()
+                }
+            }
+
+        this.ultimate = {
+            name: "Darkflame Bloom",
+            description: "Deal Fire damage all enemy targets and apply 'Wilt' to all targets, if they already have 'Wilt', apply 'Ruin'. If they already have 'Ruin', all damaging DoTs take effect twice. ",
+            modifier: 2,
+            sfx: new Audio("VO_JA_Evernight_Ultimate_-_Activate_01.ogg"),
+            execute: () => {
+                if (this.resource >= this.resourcemax) {
+                    flashUltimate(this);
+                    enemyList.forEach(enemy => {
+                        const dmg = dealDamage(this, enemy, this.ultimate.modifier);
+                        if (enemy.weaknesses.some(w => w.weakness === this.element)) {
+                            toughnessDamage(enemy, (20 * this.breakeffect))
+                        }
+                        enemy.currentHP -= dmg;
+                        if (enemy.debuffs.some(d => d.id === "Wilt")) {
+                            applyDebuff(enemy, "Ruin", this);
+                        }
+                        if (enemy.debuffs.some(d => d.id === "Ruin")) {
+                            procDoTs(enemy);
+                            procDoTs(enemy);
+                        }
+                        applyDebuff(enemy, "Wilt", this);
+                        this.resource = 0;
+                        addTotalDamage(dmg);
+                        document.getElementById("dmgtext").innerText = `${this.name} dealt ${dmg} damage to all enemies!`
+                        document.getElementById("ultimatebutton").disabled = true;
+                        checkDeath();
+                        updateCharacterStats();
+                        updateEnemyStats();
+                    });
+                }
+                else {
+                    showTotalDamage("Not enough energy!");
+                    console.log("No energy")
+                }
+            },
+        };
+    }
+}
 class VoidRangerReaver extends Enemy {
     constructor(level) {
         super({
@@ -271,8 +410,8 @@ class VoidRangerReaver extends Enemy {
                 weakness2: "Ice",
                 weakness3: "Wind",
             },
-            hp: 120,
-            atk: 12,
+            hp: 1120, //120
+            atk: 1, //12
             def: 210,
             speed: 100,
             toughness: 20,
@@ -284,47 +423,281 @@ class VoidRangerReaver extends Enemy {
 
     async onTurn() {
         await sleep(1000);
-
-        if (this.isBroken == true) {
-            brokenEnemy(this);
-            return;
-        }
-
+        enemyPreTurn(this)
         await sleep(750);
-        console.log(`${this.name}'s turn!`);
         const chooseAttack = Math.floor(Math.random() * 2);
         let { actualTarget } = enemyRandomTarget();
         await sleep(750);
         if (chooseAttack == 0) {
             // Hunting Blade
-            document.getElementById("infotext").textContent = `${this.name} uses Hunting Blade!`;
+            document.getElementById("infotext").textContent = `${this.name} uses Hunting Blade on ${actualTarget.name}!`;
+            new Audio("lknhemis25-stab-sfx-5.mp3").play();
             document.getElementById("dmgtext").innerText = ``
             await sleep(1000);
             let dmg = dealDamageEnemy(this, actualTarget, 2.5);
             actualTarget.currentHP -= dmg
-            console.log(dmg)
+            energyGain(actualTarget, 10);
             document.getElementById("dmgtext").innerText = `${this.name} dealt ${dmg} damage to ${actualTarget.name}!`
         } else {
             // Vortex Leap
+            new Audio("mixkit-metal-hit-woosh-1485.wav").play();
             const { actualTarget, index } = enemyRandomTarget();
             let targetLeft = characterList[index - 1];
             let targetRight = characterList[index + 1];
             document.getElementById("dmgtext").innerText = ``
-            document.getElementById("infotext").textContent = `${this.name} uses Vortex Leap!`;
+            document.getElementById("infotext").textContent = `${this.name} uses Vortex Leap, centered on ${actualTarget.name}!`;
             await sleep(1000);
             let dmg = dealDamageEnemy(this, actualTarget, 1.5);
             actualTarget.currentHP -= dmg
+            energyGain(actualTarget, 10);
             document.getElementById("dmgtext").innerText = `${this.name} dealt ${dmg} damage to multiple enemies!`
-            if (targetLeft)
+            if (targetLeft) {
                 targetLeft.currentHP -= dmg;
-            if (targetRight)
+                energyGain(targetLeft, 10)
+            }
+            if (targetRight) {
                 targetRight.currentHP -= dmg;
+                energyGain(targetRight, 10)
+            }
 
         }
-        checkDeath(targetList, turnOrder);
+        checkDeath();
         updateCharacterStats();
         updateEnemyStats();
     }
+}
+
+class VoidRangerDistorter extends Enemy {
+    constructor(level) {
+        super({
+            name: "Voidranger: Distorter",
+            img: "Enemy_Voidranger_Distorter.webp",
+            level: level,
+            affiliation: "Antimatter Legion",
+            weaknesses: {
+                weakness1: "Fire",
+                weakness2: "Imaginary",
+                weakness3: "Wind",
+            },
+            hp: 1000, //100
+            atk: 1, //15
+            def: 210,
+            speed: 120,
+            toughness: 20,
+            hpgrowth: 6.4,
+            atkgrowth: 5,
+            defgrowth: 3
+        });
+    }
+
+    async onTurn() {
+        await sleep(1000);
+        enemyPreTurn(this)
+        await sleep(750);
+        let { actualTarget } = enemyRandomTarget();
+        characterList.forEach(c => {
+            if (c.debuffs.some(d => d.id === "Nihility's Command") && c.isAlive == true) {
+                actualTarget = c
+            }
+        });
+        await sleep(750);
+        // Shadowless Void Strike
+        if (actualTarget.debuffs.some(d => d.id == "Nihility's Command")) {
+            document.getElementById("infotext").textContent = `${this.name} uses Shadowless Void Strike on ${actualTarget.name}!`;
+            new Audio(" SPELL_MA_Artifact_Ebonbolt_Cast_02(1).ogg").play();
+            document.getElementById("dmgtext").innerText = ``
+            await sleep(1000);
+            let dmg = dealDamageEnemy(this, actualTarget, 5);
+            actualTarget.currentHP -= dmg
+            energyGain(actualTarget, 15);
+            document.getElementById("dmgtext").innerText = `${this.name} dealt ${dmg} damage to ${actualTarget.name}!`
+            actualTarget.debuffs.find(d => d.id === "Nihility's Command").duration--;
+        }
+        else {
+            // Nihility's Command
+            document.getElementById("dmgtext").innerText = ``
+            new Audio("ShadowCast.ogg").play();
+            document.getElementById("infotext").textContent = `${this.name} uses Nihility's Command on ${actualTarget.name}!`;
+            applyDebuff(actualTarget, "Nihility's Command", this);
+
+            await sleep(1000);
+
+        }
+        checkDeath();
+        updateCharacterStats();
+        updateEnemyStats();
+    }
+}
+
+let enemyDatabase = [VoidRangerReaver, VoidRangerDistorter];
+
+function generateEnemies(num, level) {
+    const selectedEnemies = [];
+    for (let i = 0; i < num; i++) {
+        const EnemyType = enemyDatabase[Math.floor(Math.random() * enemyDatabase.length)];
+        selectedEnemies.push(new EnemyType(level));
+    }
+    enemyList.push(...selectedEnemies)
+
+}
+
+function enemyPreTurn(unit) {
+    resolveBuffsandDebuffs(unit);
+    if (unit.isStunned == true) {
+        document.getElementById("infotext").textContent = `${unit.name} is stunned!`
+        console.log("Stunned! Turn skipped!")
+        return;
+    }
+    if (unit.isBroken == true) {
+        brokenEnemy(unit);
+    }
+}
+
+function energyGain(target, amount) {
+    target.resource = Math.min((target.resource + amount) * target.energyRegen, target.resourcemax)
+}
+
+function toughnessDamage(target, amount) {
+    target.currenttoughness = Math.max((target.currenttoughness - amount), 0)
+}
+
+function showEffects() {
+    updateBuffsandDebuffs();
+    enemyList.forEach((enemy, i) => {
+        for (let j = 0; j < 5; j++) {
+            const slot = document.getElementById(`enemy${i + 1}-debuff${j + 1}`);
+            if (!slot) continue;
+
+            if (enemy.debuffs[j]) {
+                slot.src = enemy.debuffs[j].src;
+                slot.title = `${enemy.debuffs[j].name}: ${enemy.debuffs[j].description} for ${enemy.debuffs[j].duration} turn(s)`;
+                slot.style.display = 'inline-block';
+            } else {
+                slot.style.display = 'none';
+            }
+        }
+    });
+
+    characterList.forEach((char, i) => {
+        for (let j = 0; j < 5; j++) {
+            // Buffs
+            const buffSlot = document.getElementById(`char${i + 1}-buff${j + 1}`);
+            if (buffSlot) {
+                if (char.buffs[j]) {
+                    buffSlot.src = char.buffs[j].src;
+                    buffSlot.title = `${char.buffs[j].name}: ${char.buffs[j].description} for ${char.buffs[j].duration} turn(s)`;
+                    buffSlot.style.display = 'inline-block';
+                } else {
+                    buffSlot.style.display = 'none';
+                }
+            }
+
+            // Debuffs
+            const debuffSlot = document.getElementById(`char${i + 1}-debuff${j + 1}`);
+            if (debuffSlot) {
+                if (char.debuffs[j]) {
+                    debuffSlot.src = char.debuffs[j].src;
+                    debuffSlot.title = `${char.debuffs[j].name}: ${char.debuffs[j].description} for ${char.debuffs[j].duration} turn(s)`;
+                    debuffSlot.style.display = 'inline-block';
+                } else {
+                    debuffSlot.style.display = 'none';
+                }
+            }
+        }
+    });
+}
+
+function procDoTs(unit){
+        unit.debuffs.forEach(debuff => {
+        if (debuff.effectdmg) debuff.effectdmg(debuff.applier, unit); } )
+
+    showEffects();
+    updateCharacterStats();
+    updateEnemyStats();
+
+}
+
+
+function resolveBuffsandDebuffs(unit) {
+    unit.debuffs.forEach(debuff => {
+        if (debuff.effectdmg) debuff.effectdmg(debuff.applier, unit);
+        debuff.duration--;
+
+        if (debuff.duration <= 0) {
+            if (debuff.revert) debuff.revert(debuff.applier, unit);
+        }
+    });
+
+    unit.debuffs = unit.debuffs.filter(d => d.duration > 0);
+    showEffects();
+}
+
+function updateBuffsandDebuffs() {
+    turnOrder.forEach(c => {
+        c.debuffs = c.debuffs.filter(d => d.duration > 0);
+    });
+
+    turnOrder.forEach(c => {
+        c.buffs = c.buffs.filter(d => d.duration > 0);
+    });
+}
+
+function applyBreakDebuff(attacker, unit, element) {
+    const debuffFind = debuffList.find(d => d.element === element);
+    if (!debuffFind) return;
+
+    const exists = unit.debuffs.some(d => d.id === debuffFind.id);
+    if (exists) return;
+
+    const debuff = { ...debuffFind };
+    debuff.applier = attacker;
+    unit.debuffs.push(debuff);
+    showEffects();
+}
+
+function applyBuff(unit, buff) {
+
+    const buffFind = buffList.find(b => b.id === buff.id);
+    if (!buffFind) console.log(`${buff} not found ${unit}`);
+
+    const buffexists = unit.buffs.some(d => d.id === buffFind.id);
+    if (buffexists) return;
+
+    const newBuff = { ...buffFind };
+    unit.buffs.push(newBuff);
+
+}
+
+function applyDebuff(unit, debuff, applier) {
+
+    const debuffFind = debuffList.find(d => d.id === debuff);
+    if (!debuffFind) return;
+
+    const debuffexists = unit.debuffs.some(d => d.id === debuffFind.id);
+    if (debuffexists) return;
+
+    const newDebuff = { ...debuffFind };
+    newDebuff.applier = applier;
+    unit.debuffs.push(newDebuff);
+    newDebuff.effect(currentTurn, unit, applier)
+
+}
+
+async function flashUltimate(character) {
+    const flashImg = document.getElementById("ultimate-flash");
+    flashImg.src = character.img;
+    flashImg.classList.remove("hidden", "fade-out");
+    flashImg.classList.add("active");
+
+    character.ultimate.sfx.play();
+
+    await new Promise(resolve => setTimeout(resolve, 1000));
+
+    flashImg.classList.add("fade-out");
+    await new Promise(resolve => setTimeout(resolve, 5000));
+
+    flashImg.classList.remove("active", "fade-out");
+    flashImg.classList.add("hidden");
 }
 
 function enemyRandomTarget() {
@@ -376,7 +749,7 @@ async function brokenEnemy(enemy) {
     document.getElementById("infotext").textContent = `${enemy.name} recovers from being broken!`;
     enemy.isBroken = false;
     enemy.currenttoughness = enemy.maxtoughness;
-    checkDeath(enemyList, turnOrder);
+    checkDeath();
     updateEnemyStats();
 }
 
@@ -459,12 +832,15 @@ function setImages() {
     for (let i = 0; i < 5; i++) {
         const enemy = enemyList[i];
         const enemyImage = document.getElementById(`enemy${i + 1}`);
+        const enemyStats = document.getElementById(`enemy${i + 1}-stats`);
         if (enemy && enemy.img) {
             enemyImage.src = enemy.img;
             enemyImage.style.display = "block";
+            if (enemyStats) enemyStats.style.display = "block";
         } else {
             enemyImage.src = "";
             enemyImage.style.display = "none";
+            if (enemyStats) enemyStats.style.display = "none";
         }
     }
 
@@ -476,29 +852,42 @@ function setImages() {
         if (char && char.img) {
             charImage.src = char.img;
             charImage.style.display = "block";
-            charElement.style.display = "block";
+            if (charStats) charStats.style.display = "block";
+            if (charElement) charElement.style.display = "block";
+            charImage.title = char.name;
         } else {
             charImage.src = "";
             charImage.style.display = "none";
-            charStats.display = "none";
-            charElement.style.display = "none";
+            if (charStats) charStats.style.display = "none";
+            if (charElement) charElement.style.display = "none";
+            updateEnemyWeaknessIcons();
+            showEffects();
+            setCharacterElementImages();
         }
     }
-    updateEnemyWeaknessIcons();
-    setCharacterElementImages();
-    targetEnemies();
-    console.log(document.querySelectorAll(".enemy img"));
+}
+
+function isPlaying(audio) {
+    return !audio.paused && !audio.ended && audio.currentTime > 0;
 }
 
 function start() {
-    createParty();
-    createEnemy();
+    combatOngoing = true;
+    const enemyImgs = document.querySelectorAll(".enemy-portrait");
+    enemyImgs.forEach(img => {img.classList.remove('enemy-targeted'); } )
+    if (characterList.length == 0) {
+        createParty();
+    }
+    generateEnemies(1, 1)
+    generateEnemies(1, 2)
+    generateEnemies(1, 3)
     setBackground();
-    let randomIndex = Math.floor(Math.random() * bgmList.length);
-    bgm.src = bgmList[randomIndex].src;
-    bgm.volume = 0.3;
-    volumePercent.textContent = Math.round(bgm.volume * 100) + "%";
-    bgm.play();
+    if (!isPlaying(bgm)) {
+        let randomIndex = Math.floor(Math.random() * bgmList.length);
+        bgm.src = bgmList[randomIndex].src;
+        bgm.play();
+        volumePercent.textContent = Math.round(bgm.volume * 100) + "%";
+    }
     setImages();
     startButton.style.display = "none";
     basicAtkButton.style.display = "inline-block";
@@ -507,26 +896,30 @@ function start() {
     skillpointscurrentdisplay.style.display = "inline-block";
     spdivider.style.display = "inline-block";
     skillpointmaxdisplay.style.display = "inline-block";
-    checkDeath(targetList, turnOrder);
+    const elements = document.querySelectorAll(".character-stats");
+    elements.forEach(el => {
+        el.style.backgroundColor = "rgba(0,0,0,0.3)";
+    });
+    checkDeath();
     initializeTurnOrder(characterList, enemyList);
     checkTurnOrder();
     updateEnemyStats();
     updateCharacterStats();
-    console.log(characterList);
-    console.log(enemyList);
-    console.log(turnOrder)
+
 };
 
 function createParty() {
     char1 = new DestructionMC(1);
+    char2 = new Constance(1);
     characterList.push(char1);
+    characterList.push(char2);
 }
 
 function createEnemy() {
     let enemy1, enemy2, enemy3, enemy4, enemy5;
     enemy1 = new VoidRangerReaver(1);
-    enemy2 = new VoidRangerReaver(5);
-    enemy3 = new VoidRangerReaver(1);
+    enemy2 = new VoidRangerReaver(2);
+    enemy3 = new VoidRangerReaver(3);
     const enemies = [enemy1, enemy2, enemy3, enemy4, enemy5];
     enemies.forEach(e => e && enemyList.push(e));
 };
@@ -541,7 +934,8 @@ pauseMusicButton.onclick = () => {
 
 startButton.onclick = start;
 
-volumePercent.textContent = Math.round(bgm.volume * 30) + "%";
+bgm.volume = 0.3;
+volumePercent.textContent = Math.round(bgm.volume * 100) + "%";
 
 volumeUp.onclick = () => {
     bgm.volume = Math.min(1, bgm.volume + 0.1);
@@ -558,21 +952,20 @@ changeMusic.onclick = () => {
     let randomIndex = Math.floor(Math.random() * bgmList.length);
     bgm.src = bgmList[randomIndex].src;
     bgm.play();
+    volumePercent.textContent = Math.round(bgm.volume * 100) + "%";
 }
 basicAtkButton.onclick = () => {
     startBasic();
-    turnOrder[0].basic.execute(targetList);
-    endBasic();
+    currentTurn.basic.execute(targetList);
 };
 skillButton.onclick = () => {
     startSkill();
-    turnOrder[0].skill.execute(targetList);
-    endSkill();
+    currentTurn.skill.execute(targetList);
 };
 
 ultimateButton.onclick = () => {
     startUltimate();
-    turnOrder[0].ultimate.execute(targetList);
+    currentTurn.ultimate.execute(targetList);
     endUltimate();
 };
 
@@ -580,6 +973,7 @@ function checkEndCombat() {
     if (enemyList.length == 0) {
         document.getElementById("infotext").textContent = `VICTORY!`;
         document.getElementById("dmgtext").textContent = ``;
+        startButton.style.display = "block";
         basicAtkButton.style.display = "none";
         skillButton.style.display = "none";
         ultimateButton.style.display = "none";
@@ -587,6 +981,7 @@ function checkEndCombat() {
         spdivider.style.display = "none";
         skillpointmaxdisplay.style.display = "none";
         removeWeaknessDisplay();
+        combatOngoing = false;
 
     }
     let downedCharacters = 0;
@@ -597,6 +992,11 @@ function checkEndCombat() {
     if (downedCharacters == characterList.length) {
         document.getElementById("infotext").textContent = `DEFEAT!`;
         document.getElementById("dmgtext").textContent = ``;
+        startButton.style.display = "block";
+        basicAtkButton.disabled = true;
+        skillButton.disabled = true;
+        ultimateButton.disabled = true;
+        combatOngoing = false;
     }
 
 }
@@ -605,13 +1005,24 @@ function checkEnemyBreaks() {
     enemyList.forEach(enemy => {
         if (enemy.currenttoughness <= 0 && !enemy.isBroken) {
             enemy.isBroken = true;
+            applyBreakDebuff(currentTurn, enemy, currentTurn.element)
             enemy.currenttoughness = 0;
-            const dmg = dealBreakDamage(turnOrder[0], enemy);
+            const dmg = dealBreakDamage(currentTurn, enemy);
             enemy.currentHP -= dmg;
             addTotalDamage(dmg);
-            document.getElementById("dmgtext").textContent = `${enemy.name} took ${dmg} break damage!`;
+            document.getElementById("dmgtext").textContent = `${enemy.name} was broken!`;
         }
     });
+}
+
+function applyElementalBreakDebuff(attacker, enemy) {
+    const debuff = debuffList.find(d => d.element === attacker.element);
+    if (!debuff) return;
+
+    if (Math.random() <= (debuff.baseChance - enemy.effectres)) {
+        const appliedDebuff = { ...debuff, duration: debuff.duration };
+        enemy.debuffs.push(appliedDebuff);
+    }
 }
 
 function updateEnemyStats() {
@@ -634,6 +1045,8 @@ function updateEnemyStats() {
             statsDiv.textContent = `${Math.floor((enemy.currentHP / enemy.stats.hp) * 100)}% HP | ${Math.floor((enemy.currenttoughness / enemy.maxtoughness) * 100)}% T`;
         }
     });
+    showEffects();
+    checkDeath();
     checkEndCombat();
 }
 
@@ -649,6 +1062,7 @@ function updateCharacterStats() {
             statsDiv.textContent = `${character.currentHP} / ${character.stats.hp} HP | ${character.resource} / ${character.resourcemax} Energy`;
         }
     });
+        checkDeath();
 }
 
 function addTotalDamage(dmg) {
@@ -674,74 +1088,78 @@ function showTotalDamage(amount) {
 }
 
 function initializeTurnOrder(characterList, enemyList) {
-    let character1 = characterList[0];
-    let character2 = characterList[1];
-    let character3 = characterList[2];
-    let character4 = characterList[3];
-    let enemy1 = enemyList[0];
-    let enemy2 = enemyList[1];
-    let enemy3 = enemyList[2];
-    let enemy4 = enemyList[3];
-    let enemy5 = enemyList[4];
-    turnOrder = [character1, character2, character3, character4, enemy1, enemy2, enemy3, enemy4, enemy5]
+    if (!combatOngoing) return;
+
+    turnOrder = [...characterList, ...enemyList]
         .filter(unit => unit != null)
         .sort((a, b) => b.stats.speed - a.stats.speed);
+
+    turnOrderCheck = 0
 }
 
 function endTurn() {
-    turnOrderCheck++;
     document.getElementById("basicatkbutton").disabled = true;
     document.getElementById("skillbutton").disabled = true;
     document.getElementById("ultimatebutton").disabled = true;
-    checkDeath(enemyList, turnOrder);
+    checkDeath();
     updateEnemyStats();
     updateCharacterStats();
     checkEndCombat();
-}
-
-async function checkTurnOrder() {
-    if (turnOrderCheck >= turnOrder.length) {
-        turnOrderCheck = 0;
-    }
-
-    const currentUnit = turnOrder[turnOrderCheck];
-
-    if (enemyList.includes(currentUnit)) {
-        checkEndCombat();
-        if (document.getElementById("infotext").textContent == "VICTORY!" || document.getElementById("infotext").textContent == "DEFEAT!") {
-            return
-        }
-        await sleep(2000);
-        document.getElementById("infotext").textContent = `It's ${currentUnit.name}'s turn!`
-        await currentUnit.onTurn();
-        await sleep(750);
+    if (combatOngoing) {
         turnOrderCheck++;
         checkTurnOrder();
-    } else {
-        checkEndCombat();
-        if (document.getElementById("infotext").textContent == "VICTORY!" || document.getElementById("infotext").textContent == "DEFEAT!") {
-            return
-        }
-        targetEnemies();
-        await sleep(1000);
-        document.getElementById("infotext").textContent = `It's ${currentUnit.name}'s turn!`;
-        targetEnemies();
-        await sleep(1000);
-        console.log(`${turnOrder[turnOrderCheck].name}'s turn!`);
-        await sleep(1000);
-        document.getElementById("basicatkbutton").disabled = false;
-        document.getElementById("skillbutton").disabled = false;
-        if (turnOrder[0].resource == turnOrder[0].resourcemax) {
-            document.getElementById("ultimatebutton").disabled = false;
-        }
-        document.getElementById("basicatkbutton").title = turnOrder[0].basic.description;
-        document.getElementById("skillbutton").title = turnOrder[0].skill.description;
-        document.getElementById("ultimatebutton").title = turnOrder[0].ultimate.description;
-        checkDeath(enemyList, turnOrder);
-        updateEnemyStats();
-        updateCharacterStats();
     }
 }
+async function checkTurnOrder() {
+    if (!combatOngoing) return;
+
+    if (turnOrderCheck >= turnOrder.length) {
+        turnOrderCheck = 0;
+        turnOrder = [];
+        initializeTurnOrder(characterList, enemyList);
+    }
+    const currentUnit = turnOrder[turnOrderCheck];
+    currentTurn = currentUnit;
+
+    if (!currentUnit) return;
+
+    checkEndCombat();
+    if (combatOngoing === false) {
+        return;
+    }
+
+    document.getElementById("infotext").textContent = `It's ${currentUnit.name}'s turn!`;
+
+    if (enemyList.includes(currentUnit)) {
+        await sleep(1000);
+        await currentUnit.onTurn();
+        await sleep(750);
+        endTurn();
+        document.getElementById("basicatkbutton").disabled = true;
+        document.getElementById("skillbutton").disabled = true;
+        document.getElementById("ultimatebutton").disabled = true;
+    } else if (characterList.includes(currentUnit)) {
+        targetEnemies();
+        await sleep(1000);
+
+        document.getElementById("basicatkbutton").disabled = false;
+        document.getElementById("skillbutton").disabled = false;
+        if (currentUnit.resource >= currentUnit.resourcemax) {
+            document.getElementById("ultimatebutton").disabled = false;
+        }
+        document.getElementById("basicatkbutton").title = `${currentUnit.basic.name}: ${currentUnit.basic.description}`;
+        document.getElementById("skillbutton").title = `${currentUnit.skill.name}: ${currentUnit.skill.description}`;
+        document.getElementById("ultimatebutton").title = `${currentUnit.ultimate.name}: ${currentUnit.ultimate.description}`;
+    }
+
+    await sleep(100);
+
+    checkDeath();
+    updateEnemyStats();
+    updateCharacterStats();
+}
+
+
 function defaultTarget() {
     targetList = targetList.filter(t => t.currentHP > 0);
     if (!targetList || targetList.length === 0) {
@@ -774,67 +1192,53 @@ function endSkill() {
         document.getElementById("currentsp").innerText = sp;
         checkUpdateEnd();
     } else {
-        checkDeath(enemyList, turnOrder)
+        checkDeath()
         updateEnemyStats();
         updateCharacterStats();
-    }
-    ;
+        document.getElementById("notification").innertext = "Not enough SP!"
+    };
 }
 
 function startUltimate() {
-    if (turnOrder[0].resource < turnOrder[0].resourcemax) {
+    if (currentTurn.resource < currentTurn.resourcemax) {
         window.alert("Not enough energy!")
         return;
     }
-    document.getElementById("voiceline").src = turnOrder[0].voiceline;
 
 }
 
 function endUltimate() {
     checkEnemyBreaks();
-    checkUpdateEnd();
+    checkDeath()
+    updateCharacterStats();
+    updateEnemyStats();
+    showTotalDamage(total);
 }
 
 function checkUpdateEnd() {
     checkEnemyBreaks();
-    checkDeath(enemyList, turnOrder)
+    checkDeath()
     updateEnemyStats();
     updateCharacterStats();
     showTotalDamage(total);
     endTurn();
-    checkEndCombat();
-    checkTurnOrder();
 }
 
-function checkDeath(targetList, turnOrder) {
-    let enemyDied = false;
-
+function checkDeath() {
     for (let i = enemyList.length - 1; i >= 0; i--) {
-        if (enemyList[i].currentHP <= 0) {
+        if (!enemyList[i].isAlive) {
             enemyList.splice(i, 1);
-            enemyDied = true;
         }
     }
 
     for (let i = turnOrder.length - 1; i >= 0; i--) {
-        if (turnOrder[i].currentHP <= 0) {
+        if (!turnOrder[i].isAlive) {
             turnOrder.splice(i, 1);
         }
     }
 
-    for (let i = targetList.length - 1; i >= 0; i--) {
-        if (!targetList[i].isAlive) {
-            targetList.splice(i, 1);
-        }
-    }
-
-    if (enemyDied && (!targetList || targetList.length === 0)) {
-        defaultTarget();
-    }
-
     setImages();
 }
-
 
 
 function dealDamageHP(attacker, target, skillMultiplier) {
@@ -861,7 +1265,7 @@ function dealDamage(attacker, target, skillMultiplier) {
     if (target.isBroken == false) {
         attackPower *= 0.9;
     }
-    let defMultiplier = (attacker.level + 20) / ((target.level + 20) * Math.max(0, 1 + target.stats.defBonus - target.stats.defReduction - attacker.stats.defIgnore) + attacker.level + 20);
+    let defMultiplier = (attacker.level + 20) / ((target.level + 20) * Math.max(0, 1 + target.stats.defBonus - target.stats.defreduction - attacker.stats.defignore) + attacker.level + 20);
     let resMultiplier = 1 - (target.stats.resi - attacker.stats.resPen);
     let damage = Math.floor(randomNum * (attackPower * (target.stats.vuln || 1) * defMultiplier * (1 + (attacker.stats.damageBonus || 0)) * (1 - (target.stats.damageMitigation || 0)) * resMultiplier));
     return damage;
@@ -876,7 +1280,7 @@ function dealDamageDef(attacker, target, skillMultiplier) {
     if (target.isBroken == false) {
         attackPower *= 0.9;
     }
-    let defMultiplier = (attacker.level + 20) / ((target.level + 20) * Math.max(0, 1 + target.stats.defBonus - target.stats.defReduction - attacker.stats.defIgnore) + attacker.level + 20);
+    let defMultiplier = (attacker.level + 20) / ((target.level + 20) * Math.max(0, 1 + target.stats.defBonus - target.stats.defreduction - attacker.stats.defignore) + attacker.level + 20);
     let resMultiplier = 1 - (target.stats.resi - attacker.stats.resPen);
     let damage = Math.floor(randomNum * (attackPower * (target.stats.vuln || 1) * defMultiplier * (1 + (attacker.stats.damageBonus || 0)) * (1 - (target.stats.damageMitigation || 0)) * resMultiplier));
     return damage;
@@ -896,10 +1300,12 @@ function dealDoTDamage(attacker, target, DoTMultiplier) {
     if (target.isBroken == false) {
         attackPower *= 0.9;
     }
-    let defMultiplier = (attacker.level + 20) / ((target.level + 20) * Math.max(0, 1 + target.defBonus - target.defreduction - attacker.defignore) + attacker.level + 20);
-    let resMultiplier = 1 - (target.stats.resi - attacker.resPen);
-    let damage = Math.floor(randomNum * (attackPower * (target.stats.vuln || 1) * defMultiplier * (attacker.stats.damageBonus || 1) * (1 - (target.stats.damageMitigation || 0)) * resMultiplier * (target.stats.DoTvuln || 1)));
+    let defMultiplier = (attacker.level + 20) / ((target.level + 20) * Math.max(0, 1 + target.stats.defBonus - target.stats.defreduction - attacker.stats.defignore) + attacker.level + 20);
+    let resMultiplier = 1 - (target.stats.resi - attacker.stats.resPen);
+    let damage = Math.floor(randomNum * (attackPower * (target.stats.vuln || 1) * defMultiplier * (1 + (attacker.stats.damageBonus || 0)) * (1 - (target.stats.damageMitigation || 0)) * resMultiplier));
+    showTotalDamage(damage);
     return damage;
+
 }
 
 function dealBreakDamage(attacker, target) {
