@@ -10,6 +10,7 @@ const skillpointmaxdisplay = document.getElementById("maxsp");
 const pauseMusicButton = document.getElementById("pauseMusic");
 const notEnoughEnergy = "Not Enough Energy!"
 const notEnoughSP = "Not Enough Skill Points!"
+const DoTDamage = "DoT damage:"
 let currentTurn;
 let total = 0;
 let combatOngoing = false;
@@ -61,7 +62,7 @@ const elementList = [
     { name: "Fire", img: "fire.webp" },
     { name: "Physical", img: "Type_Physical.webp" },
     { name: "Lightning", img: "Type_Lightning.png" },
-    { name: "Imaginary", img: "Imaginary.png" },
+    { name: "Imaginary", img: "Type_Imaginary-removebg-preview.png" },
     { name: "Quantum", img: "Type_Quantum.webp" },
     { name: "Wind", img: "Type_Wind.webp" },
     { name: "Ice", img: "Type_Ice.png" },
@@ -386,6 +387,9 @@ class Constance extends Character {
                             procDoTs(enemy);
                         }
                         applyDebuff(enemy, "Wilt", this);
+
+
+                    });
                         this.resource = 5;
                         addTotalDamage(dmg);
                         document.getElementById("dmgtext").innerText = `${this.name} dealt ${dmg} damage to all enemies!`
@@ -393,7 +397,7 @@ class Constance extends Character {
                         checkDeath();
                         updateCharacterStats();
                         updateEnemyStats();
-                    });
+                        endUltimate();
                 }
                 else {
                     showNotification(notEnoughEnergy);
@@ -437,7 +441,7 @@ class Baiheng extends Character {
                 if (target.weaknesses.some(w => w.weakness === this.element)) {
                     toughnessDamage(target, (15 * this.breakeffect))
                 }
-                energyGain(this, 10);
+                energyGain(this, 100);
                 if (sp < spmax) {
                     sp++;
                     document.getElementById("currentsp").innerText = sp;
@@ -486,7 +490,7 @@ class Baiheng extends Character {
                     flashUltimate(this);
                     let averageHP;
                     characterList.forEach(character => {
-                        averageHP = character.currentHP / character.hp
+                        averageHP = character.currentHP / character.stats.hp
                 });
                     averageHP /= characterList.length;
                     characterList.forEach(character => {
@@ -517,7 +521,7 @@ class VoidRangerReaver extends Enemy {
                 weakness3: "Wind",
             },
             hp: 1120, //120
-            atk: 1, //12
+            atk: 12, //12
             def: 210,
             speed: 100,
             toughness: 20,
@@ -586,7 +590,7 @@ class VoidRangerDistorter extends Enemy {
                 weakness3: "Wind",
             },
             hp: 1000, //100
-            atk: 1, //15
+            atk: 15, //15
             def: 210,
             speed: 120,
             toughness: 20,
@@ -703,7 +707,6 @@ function showEffects() {
                 }
             }
 
-            // Debuffs
             const debuffSlot = document.getElementById(`char${i + 1}-debuff${j + 1}`);
             if (debuffSlot) {
                 if (char.debuffs[j]) {
@@ -1206,6 +1209,7 @@ function addTotalDamage(dmg) {
 }
 
 function showTotalDamage(amount) {
+    if (amount > 0){
     const damageText = document.getElementById("totaldamage");
     damageText.textContent = ("Total Damage", amount);
 
@@ -1220,6 +1224,7 @@ function showTotalDamage(amount) {
         damageText.style.opacity = 0;
     }, 500);
     setTimeout(() => total = 0, 500)
+}
 }
 
 function showNotification(text) {
@@ -1460,6 +1465,7 @@ function dealDoTDamage(attacker, target, DoTMultiplier) {
     let resMultiplier = 1 - (target.stats.resi - attacker.stats.resPen);
     let damage = Math.floor(randomNum * (attackPower * (target.stats.vuln || 1) * defMultiplier * (1 + (attacker.stats.damageBonus || 0)) * (1 - (target.stats.damageMitigation || 0)) * resMultiplier));
     showTotalDamage(damage);
+    showNotification(DoTDamage);
     return damage;
 
 }

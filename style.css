@@ -123,7 +123,7 @@ body {
 #text-center {
     position: fixed;
     top: 50%;
-    left: 45%;
+    left: 75%;
     transform: translate(-50%, -50%);
     display: flex;
     flex-direction: column;
@@ -146,7 +146,7 @@ body {
 #totaldamage {
     position: fixed;
     top: 400px;
-    left: 75%;
+    left: 65%;
     transform: translateX(-75%);
     font-size: 48px;
     text-align: center;
@@ -160,10 +160,10 @@ body {
 
 #notification {
     position: fixed;
-    top: 400px;
-    left: 75%;
+    top: 350px;
+    left: 65%;
     transform: translateX(-50%);
-    font-size: 48px;
+    font-size: 22px;
     text-align: center;
     max-width: 400px;
     word-wrap: break-word;
@@ -300,7 +300,7 @@ body {
 .character-debuffs {
     gap: 4px;
     position: absolute;
-    bottom: 42px;
+    bottom: -42px;
 }
 
 .character-buffs {
