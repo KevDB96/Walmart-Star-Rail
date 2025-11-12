@@ -8,6 +8,8 @@ const skillpointscurrentdisplay = document.getElementById("currentsp");
 const spdivider = document.getElementById("spdivider");
 const skillpointmaxdisplay = document.getElementById("maxsp");
 const pauseMusicButton = document.getElementById("pauseMusic");
+const notEnoughEnergy = "Not Enough Energy!"
+const notEnoughSP = "Not Enough Skill Points!"
 let currentTurn;
 let total = 0;
 let combatOngoing = false;
@@ -38,10 +40,13 @@ const debuffList = [
     { id: "ImaginaryBreak", name: "Imprison", src: "Icon_Imprisonment.webp", description: `This unit has reduced speed`, duration: 2, baseChance: 1.5, effect: (attacker, unit) => { unit.speed *= 0.8 }, revert: (attacker, unit) => { unit.speed += (20 * attacker.breakeffect) }, element: "Imaginary", applier: "" },
     { id: "Wilt", name: "Wilt", src: "lick-enkindled-betrayal-skill_icon.webp", description: `Take Fire damage each turn and reduces defense by 20%`, duration: 3, baseChance: 2, effect: (attacker, unit) => { unit.stats.defreduction -= 0.2 }, effectdmg: (attacker, unit) => { unit.currentHP -= dealDoTDamage(attacker, unit, 1) }, revert: (attacker, unit) => { unit.stats.defreduction += 0.2 }, applier: "" },
     { id: "Ruin", name: "Ruin", src: "wallowentombed-ash-skill_icon.webp", description: `Take Fire damage each turn and reduces defense by 20%`, duration: 3, baseChance: 2.5, effect: (attacker, unit) => { unit.stats.defreduction -= 0.2 }, effectdmg: (attacker, unit) => { unit.currentHP -= dealDoTDamage(attacker, unit, 1) }, revert: (attacker, unit) => { unit.stats.defreduction += 0.2 }, applier: "" },
-    { id: "Nihility's Command", name: "Nihility's Command", src: "internet-keyword-targeting-seo-target-icon--22.png", description: `Targeted for a massive attack and taking 10% increased damage`, duration: 1, baseChance: 1, effect: (attacker, unit) => { unit.stats.defreduction -= 0.1 }, revert: (attacker, unit) => { unit.stats.defreduction += 0.1 }, applier: "" }
+    { id: "Nihility's Command", name: "Nihility's Command", src: "internet-keyword-targeting-seo-target-icon--22.png", description: `Targeted for a massive attack and taking 10% increased damage`, duration: 2, baseChance: 1, effect: (attacker, unit) => { unit.stats.defreduction -= 0.1 }, revert: (attacker, unit) => { unit.stats.defreduction += 0.1 }, applier: "" }
 ]
     ;
-const buffList = [];
+const buffList = [
+    { id: "Rushing Waters", name: "Rushing Waters", src: "Ability_Singing_Among_Clouds.webp", description: `Baiheng has increased her speed by 25%`, duration: 1, baseChance: 1, effect1: (attacker, unit) => { unit.speed *= 1.25 }, revert: (attacker, unit) => { unit.speed /= 1.25 }, applier: "" },
+    { id: "Mending Waters", name: "Mending Waters", src: "Ability_Gourdful_of_Elixir.webp", description: `This unit will be healed at the start of their next turn`, duration: 3,        effect: (attacker, unit, applier) => { unit.currentHP += Math.floor((0.06 * applier.stats.hp) + 50 )}, applier: "" }
+];
 const bgmList = [
     { name: "Scarab King", src: "Aberrant Receptacle • Starcrusher Swarm King Boss Theme (Extended) Perfect Loop- HSR Version 1.6 OST [EjCeuPEq4ro].mp3" },
     { name: "Lygus", src: "Lygus Boss Theme (Extended) - Honkai_ Star Rail 3.5 OST.mp3" },
@@ -279,7 +284,7 @@ class DestructionMC extends Character {
                     });
                 }
                 else {
-                    showTotalDamage("Not enough energy!");
+                    showNotification(notEnoughEnergy);
                 }
             },
         };
@@ -298,7 +303,7 @@ class Constance extends Character {
             element: "Fire",
             resource: 25,
             resourcemax: 130,
-            basehp: 148,
+            basehp: 140,
             baseatk: 92,
             basedef: 82,
             speed: 96,
@@ -320,7 +325,7 @@ class Constance extends Character {
                 if (target.weaknesses.some(w => w.weakness === this.element)) {
                     toughnessDamage(target, (10 * this.breakeffect))
                 }
-                energyGain(this, 100);
+                energyGain(this, 10);
                 if (sp < spmax) {
                     sp += 1;
                     document.getElementById("currentsp").innerText = sp;
@@ -333,7 +338,7 @@ class Constance extends Character {
 
             this.skill = {
                 name: "Wilting Roses",
-                description: "Deal Fire damage to all enemies and apply 'Wilt'. If the target already has 'Wilt', allow all Damage-Over-Time effects to deal damage once",
+                description: "Deal Fire damage to all enemies and apply 'Wilt'. If the target already has 'Wilt', allow all Damage-Over-Time effects to deal damage once. Gain more energy when hitting more targets, up to 3.",
                 modifier: 1.25,
                 sfx: new Audio("mixkit-fire-swoosh-burning-1328.wav"),
                 execute: () => {
@@ -348,14 +353,14 @@ class Constance extends Character {
                             if (enemy.debuffs.some(d => d.id === "Wilt")) {
                             procDoTs(enemy);
                         }
-                            energyGain(this, 20);
-                            addTotalDamage(dmg);
+                            addTotalDamage(dmg*enemyList.length);
                             applyDebuff(enemy, "Wilt", this);
                             document.getElementById("dmgtext").innerText = `${this.name} dealt ${dmg} to all enemies`;
                         })
-
-                    }
+                    energyGain(this, Math.min(60, (20*enemyList.length)));
                     endSkill()
+                    }
+
                 }
             }
 
@@ -381,7 +386,7 @@ class Constance extends Character {
                             procDoTs(enemy);
                         }
                         applyDebuff(enemy, "Wilt", this);
-                        this.resource = 0;
+                        this.resource = 5;
                         addTotalDamage(dmg);
                         document.getElementById("dmgtext").innerText = `${this.name} dealt ${dmg} damage to all enemies!`
                         document.getElementById("ultimatebutton").disabled = true;
@@ -391,13 +396,114 @@ class Constance extends Character {
                     });
                 }
                 else {
-                    showTotalDamage("Not enough energy!");
-                    console.log("No energy")
+                    showNotification(notEnoughEnergy);
                 }
             },
         };
     }
 }
+
+class Baiheng extends Character {
+    constructor(level) {
+        super({
+            name: "Baiheng",
+            img: "Baiheng.png",
+            level: level,
+            affiliation: "Xianzhou",
+            star: "5*",
+            path: "Abundance",
+            element: "Ice",
+            resource: 25,
+            resourcemax: 110,
+            basehp: 148,
+            baseatk: 49,
+            basedef: 85,
+            speed: 101,
+            hpgrowth: 13,
+            atkgrowth: 5,
+            defgrowth: 7,
+        });
+
+        this.basic = {
+            name: "Wave, Crash Against Stone",
+            description: "Deal Ice damage to one designated enemy and grants Baiheng a speed boost for 1 turn.",
+            modifier: 0.75,
+            sfx: new Audio("mixkit-water-splash-1311.wav"),
+            execute: (targets) => {
+                const target = targets[0];
+                this.basic.sfx.play();
+                const dmg = dealDamage(this, target, this.basic.modifier);
+                target.currentHP -= dmg;
+                if (target.weaknesses.some(w => w.weakness === this.element)) {
+                    toughnessDamage(target, (15 * this.breakeffect))
+                }
+                energyGain(this, 10);
+                if (sp < spmax) {
+                    sp++;
+                    document.getElementById("currentsp").innerText = sp;
+                }
+                document.getElementById("dmgtext").innerText = `${this.name} dealt ${dmg} damage to ${target.name}`;
+                applyBuff(this, "Rushing Waters", this);
+                this.speed *= 1.25;
+                showEffects();
+                console.log(this,buffList);
+                addTotalDamage(dmg);
+                endBasic();
+            }
+        },
+
+            this.skill = {
+                name: "Mending of the Tides",
+                description: "Heal all allies and apply a Healing-Over-Time effect, based on Baiheng's max HP",
+                modifier: 0.1,
+                sfx: new Audio("mixkit-video-game-magic-potion-2830.wav"),
+                execute: () => {
+                    if (sp != 0) {
+                        this.skill.sfx.play();
+                        const healAmount = ((this.skill.modifier * this.stats.hp) + 205);
+                        characterList.forEach(character => {
+                            healUnit(character, healAmount);
+                            applyBuff(character, "Mending Waters", this)
+                            document.getElementById("dmgtext").innerText = `${this.name} healed all allies for ${Math.floor(healAmount)}`;
+                        })
+                        addTotalDamage(Math.floor((this.skill.modifier * this.stats.hp) * characterList.length))
+                        energyGain(this, 20);
+
+                    }
+                    showEffects();
+                    updateCharacterStats();
+                    endSkill();
+                }
+            }
+
+        this.ultimate = {
+            name: "Water, The Great Equalizer",
+            description: "Averages out all allies' HP percentage, then heal for a large amount and apply Mending Waters. ",
+            modifier: 0.15,
+            sfx: new Audio("mixkit-jump-into-the-water-1180.wav"),
+            execute: () => {
+                if (this.resource >= this.resourcemax) {
+                    flashUltimate(this);
+                    let averageHP;
+                    characterList.forEach(character => {
+                        averageHP = character.currentHP / character.hp
+                });
+                    averageHP /= characterList.length;
+                    characterList.forEach(character => {
+                    character.currentHP = character.stats.hp * averageHP;
+                    healUnit(character, (this.skill.modifier * this.stats.hp) + 205 );
+                    applyBuff(character, "Mending Waters", this)
+                });
+
+                }
+                else {
+                    showNotification(notEnoughEnergy);
+                }
+            },
+        };
+    }
+}
+
 class VoidRangerReaver extends Enemy {
     constructor(level) {
         super({
@@ -572,6 +678,9 @@ function showEffects() {
                 slot.src = enemy.debuffs[j].src;
                 slot.title = `${enemy.debuffs[j].name}: ${enemy.debuffs[j].description} for ${enemy.debuffs[j].duration} turn(s)`;
                 slot.style.display = 'inline-block';
+                slot.style.outline = "rgba(0,0,0,0.3)"
+                slot.style.height = "25px"
+                slot.style.width = "25px"
             } else {
                 slot.style.display = 'none';
             }
@@ -580,13 +689,15 @@ function showEffects() {
 
     characterList.forEach((char, i) => {
         for (let j = 0; j < 5; j++) {
-            // Buffs
             const buffSlot = document.getElementById(`char${i + 1}-buff${j + 1}`);
             if (buffSlot) {
                 if (char.buffs[j]) {
                     buffSlot.src = char.buffs[j].src;
                     buffSlot.title = `${char.buffs[j].name}: ${char.buffs[j].description} for ${char.buffs[j].duration} turn(s)`;
                     buffSlot.style.display = 'inline-block';
+                    buffSlot.style.backgroundColor = "rgba(0,0,0,0.3)"
+                    buffSlot.style.height = "50px"
+                    buffSlot.style.width = "50px"
                 } else {
                     buffSlot.style.display = 'none';
                 }
@@ -599,6 +710,9 @@ function showEffects() {
                     debuffSlot.src = char.debuffs[j].src;
                     debuffSlot.title = `${char.debuffs[j].name}: ${char.debuffs[j].description} for ${char.debuffs[j].duration} turn(s)`;
                     debuffSlot.style.display = 'inline-block';
+                    debuffSlot.style.backgroundColor = "rgba(0,0,0,0.3)"
+                    debuffSlot.style.height = "50px"
+                    debuffSlot.style.width = "50px"
                 } else {
                     debuffSlot.style.display = 'none';
                 }
@@ -611,6 +725,7 @@ function procDoTs(unit){
         unit.debuffs.forEach(debuff => {
         if (debuff.effectdmg) debuff.effectdmg(debuff.applier, unit); } )
 
+    checkDeath();
     showEffects();
     updateCharacterStats();
     updateEnemyStats();
@@ -619,6 +734,18 @@ function procDoTs(unit){
 
 
 function resolveBuffsandDebuffs(unit) {
+
+    unit.buffs.forEach(buff => {
+        if (buff.effect) buff.effect(buff.applier, unit, buff.applier);
+        buff.duration--;
+
+        if (buff.duration <= 0) {
+            if (buff.revert) buff.revert(buff.applier, unit);
+        }
+    });
+
+    unit.buffs = unit.buffs.filter(b => b.duration > 0);
+
     unit.debuffs.forEach(debuff => {
         if (debuff.effectdmg) debuff.effectdmg(debuff.applier, unit);
         debuff.duration--;
@@ -629,6 +756,7 @@ function resolveBuffsandDebuffs(unit) {
     });
 
     unit.debuffs = unit.debuffs.filter(d => d.duration > 0);
+
     showEffects();
 }
 
@@ -655,15 +783,16 @@ function applyBreakDebuff(attacker, unit, element) {
     showEffects();
 }
 
-function applyBuff(unit, buff) {
+function applyBuff(unit, buff, applier) {
 
-    const buffFind = buffList.find(b => b.id === buff.id);
+    const buffFind = buffList.find(b => b.id === buff);
     if (!buffFind) console.log(`${buff} not found ${unit}`);
 
     const buffexists = unit.buffs.some(d => d.id === buffFind.id);
     if (buffexists) return;
 
     const newBuff = { ...buffFind };
+    newBuff.applier = applier;
     unit.buffs.push(newBuff);
 
 }
@@ -836,6 +965,7 @@ function setImages() {
         if (enemy && enemy.img) {
             enemyImage.src = enemy.img;
             enemyImage.style.display = "block";
+            enemyImage.title = enemy.name;
             if (enemyStats) enemyStats.style.display = "block";
         } else {
             enemyImage.src = "";
@@ -854,7 +984,7 @@ function setImages() {
             charImage.style.display = "block";
             if (charStats) charStats.style.display = "block";
             if (charElement) charElement.style.display = "block";
-            charImage.title = char.name;
+            charImage.title = `${char.name}: ${char.path}`;
         } else {
             charImage.src = "";
             charImage.style.display = "none";
@@ -911,8 +1041,10 @@ function start() {
 function createParty() {
     char1 = new DestructionMC(1);
     char2 = new Constance(1);
+    char3 = new Baiheng(1);
     characterList.push(char1);
     characterList.push(char2);
+    characterList.push(char3);
 }
 
 function createEnemy() {
@@ -1057,6 +1189,9 @@ function updateCharacterStats() {
             character.currentHP = 0,
                 checkEndCombat();
         }
+        if (character.currentHP > character.stats.hp) {
+            character.currentHP = character.stats.hp
+        }
         const statsDiv = document.getElementById(`char${i + 1}-stats`);
         if (statsDiv) {
             statsDiv.textContent = `${character.currentHP} / ${character.stats.hp} HP | ${character.resource} / ${character.resourcemax} Energy`;
@@ -1085,6 +1220,22 @@ function showTotalDamage(amount) {
         damageText.style.opacity = 0;
     }, 500);
     setTimeout(() => total = 0, 500)
+}
+
+function showNotification(text) {
+    const notificationText = document.getElementById("notification");
+    notificationText.textContent = (text);
+
+    notificationText.style.transition = 'none';
+    notificationText.style.opacity = 1;
+
+    void notificationText.offsetWidth;
+
+    notificationText.style.transition = 'opacity 0.8s ease-out';
+
+    setTimeout(() => {
+        notificationText.style.opacity = 0;
+    }, 500);
 }
 
 function initializeTurnOrder(characterList, enemyList) {
@@ -1139,6 +1290,7 @@ async function checkTurnOrder() {
         document.getElementById("skillbutton").disabled = true;
         document.getElementById("ultimatebutton").disabled = true;
     } else if (characterList.includes(currentUnit)) {
+        resolveBuffsandDebuffs(currentUnit);
         targetEnemies();
         await sleep(1000);
 
@@ -1179,23 +1331,27 @@ function startBasic() {
 }
 
 function endBasic() {
+    sleep(200);
     checkUpdateEnd();
 }
 
 function startSkill() {
     defaultTarget();
+    if (sp == 0){
+    showNotification(notEnoughSP)
+    }
 }
 
 function endSkill() {
     if (sp != 0) {
-        sp -= 1;
+        sp--;
         document.getElementById("currentsp").innerText = sp;
+        sleep(200);
         checkUpdateEnd();
     } else {
         checkDeath()
         updateEnemyStats();
         updateCharacterStats();
-        document.getElementById("notification").innertext = "Not enough SP!"
     };
 }
 
@@ -1327,4 +1483,7 @@ function dealBreakDamage(attacker, target) {
     return damage;
 }
 
+function healUnit(unit, amount){
+    unit.currentHP += amount;
+}
 
