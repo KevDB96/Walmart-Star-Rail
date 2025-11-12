@@ -34,7 +34,7 @@ let turnOrderCheck = 0;
 const debuffList = [
     { id: "FireBreak", name: "Burn", src: "Icon_Burn.webp", description: `Take Fire damage each turn`, duration: 2, baseChance: 1.5, effect: (attacker, unit) => { unit.currentHP -= 50 * Math.pow(attacker.level, 0.95) }, element: "Fire", applier: "" },
     { id: "PhysicalBreak", name: "Bleed", src: "Icon_Bleed.webp", description: `Take Physical damage each turn based on max HP`, duration: 2, baseChance: 1.5, effect: (attacker, unit) => { unit.currentHP -= Math.min((unit.stats.hp * 0.1), 50 * Math.pow(attacker.level, 0.95)) }, element: "Physical", applier: "" },
-    { id: "IceBreak", name: "Freeze", src: "Icon_Frozen.webp", description: `Take Ice damage each turn and stunned`, duration: 1, baseChance: 1.5, effect: (attacker, unit) => { unit.isStunned = true; { unit.currentHP -= 50 * Math.pow(attacker.level, 0.95) } }, element: "Ice", applier: "" },
+    { id: "IceBreak", name: "Freeze", src: "Icon_Frozen.webp", description: `Take Ice damage each turn and stunned`, duration: 1, baseChance: 1.5, effectdmg: (attacker, unit) => { unit.isStunned = true; { unit.currentHP -= 50 * Math.pow(attacker.level, 0.95) } }, element: "Ice", applier: "" },
     { id: "LightningBreak", name: "Shock", src: "Icon_Shock.webp", description: `Take Lightning damage each turn`, duration: 2, baseChance: 1.5, effect: (attacker, unit) => { unit.currentHP -= 100 * Math.pow(attacker.level, 0.95) }, element: "Lightning", applier: "" },
     { id: "WindBreak", name: "Shear", src: "Icon_Wind_Shear.webp", description: `Take Wind damage each turn`, duration: 2, stacks: 2, maxstacks: 5, baseChance: 1.5, effect: (attacker, unit) => { unit.currentHP -= stacks * 50 * Math.pow(attacker.level, 0.95); }, element: "Wind", applier: "" },
     { id: "QuantumBreak", name: "Entangle", src: "Icon_Entanglement.webp", description: `Take Quantum damage each turn and slightly reduces speed`, duration: 2, stacks: 1, maxstacks: 5, baseChance: 1.5, effect: (attacker, unit) => { unit.currentHP -= stacks * 0.6 * 50 * Math.pow(attacker.level, 0.95); unit.speed -= (10 * attacker.breakeffect) }, revert: (attacker, unit) => { unit.speed += (20 * attacker.breakeffect) }, element: "Quantum", applier: "" },
@@ -46,7 +46,7 @@ const debuffList = [
     ;
 const buffList = [
     { id: "Rushing Waters", name: "Rushing Waters", src: "Ability_Singing_Among_Clouds.webp", description: `Baiheng has increased her speed by 25%`, duration: 1, baseChance: 1, effect1: (attacker, unit) => { unit.speed *= 1.25 }, revert: (attacker, unit) => { unit.speed /= 1.25 }, applier: "" },
-    { id: "Mending Waters", name: "Mending Waters", src: "Ability_Gourdful_of_Elixir.webp", description: `This unit will be healed at the start of their next turn`, duration: 3,        effect: (attacker, unit, applier) => { unit.currentHP += Math.floor((0.06 * applier.stats.hp) + 50 )}, applier: "" }
+    { id: "Mending Waters", name: "Mending Waters", src: "Ability_Gourdful_of_Elixir.webp", description: `This unit will be healed at the start of their next turn`, duration: 3, effect: (attacker, unit, applier) => { unit.currentHP += Math.floor((0.06 * applier.stats.hp) + 50) }, applier: "" }
 ];
 const bgmList = [
     { name: "Scarab King", src: "Aberrant Receptacle • Starcrusher Swarm King Boss Theme (Extended) Perfect Loop- HSR Version 1.6 OST [EjCeuPEq4ro].mp3" },
@@ -252,7 +252,7 @@ class DestructionMC extends Character {
                         addTotalDamage(dmgMain);
                         addTotalDamage(leftdmg);
                         addTotalDamage(rightdmg);
-                        document.getElementById("dmgtext").innerText = `${this.name} dealt ${dmgMain} damage to ${main.name} and ${(Math.ceil(dmgMain / 2))} damage to adjacent targets!`
+                        document.getElementById("dmgtext").innerText = `${this.name} dealt ${dmgMain} damage to ${main.name} and ${(Math.ceil(dmgMain / 2))} damage to others!`
                         endSkill();
                     }
                     else {
@@ -352,14 +352,15 @@ class Constance extends Character {
                                 enemy.currenttoughness -= (20 * this.breakeffect);
                             }
                             if (enemy.debuffs.some(d => d.id === "Wilt")) {
-                            procDoTs(enemy);
-                        }
-                            addTotalDamage(dmg*enemyList.length);
+                                procDoTs(enemy);
+                                showNotification(DoTDamage);
+                            }
+                            addTotalDamage(dmg * enemyList.length);
                             applyDebuff(enemy, "Wilt", this);
                             document.getElementById("dmgtext").innerText = `${this.name} dealt ${dmg} to all enemies`;
                         })
-                    energyGain(this, Math.min(60, (20*enemyList.length)));
-                    endSkill()
+                        energyGain(this, Math.min(60, (20 * enemyList.length)));
+                        endSkill()
                     }
 
                 }
@@ -390,14 +391,14 @@ class Constance extends Character {
 
 
                     });
-                        this.resource = 5;
-                        addTotalDamage(dmg);
-                        document.getElementById("dmgtext").innerText = `${this.name} dealt ${dmg} damage to all enemies!`
-                        document.getElementById("ultimatebutton").disabled = true;
-                        checkDeath();
-                        updateCharacterStats();
-                        updateEnemyStats();
-                        endUltimate();
+                    this.resource = 5;
+                    addTotalDamage(dmg);
+                    document.getElementById("dmgtext").innerText = `${this.name} dealt ${dmg} damage to all enemies!`
+                    document.getElementById("ultimatebutton").disabled = true;
+                    checkDeath();
+                    updateCharacterStats();
+                    updateEnemyStats();
+                    endUltimate();
                 }
                 else {
                     showNotification(notEnoughEnergy);
@@ -441,16 +442,16 @@ class Baiheng extends Character {
                 if (target.weaknesses.some(w => w.weakness === this.element)) {
                     toughnessDamage(target, (15 * this.breakeffect))
                 }
-                energyGain(this, 100);
+                energyGain(this, 10);
                 if (sp < spmax) {
                     sp++;
                     document.getElementById("currentsp").innerText = sp;
                 }
-                document.getElementById("dmgtext").innerText = `${this.name} dealt ${dmg} damage to ${target.name}`;
+                document.getElementById("dmgtext").innerText = `${this.name} dealt ${dmg} damage to ${target.name}!`;
                 applyBuff(this, "Rushing Waters", this);
                 this.speed *= 1.25;
                 showEffects();
-                console.log(this,buffList);
+                console.log(this, buffList);
                 addTotalDamage(dmg);
                 endBasic();
             }
@@ -468,7 +469,7 @@ class Baiheng extends Character {
                         characterList.forEach(character => {
                             healUnit(character, healAmount);
                             applyBuff(character, "Mending Waters", this)
-                            document.getElementById("dmgtext").innerText = `${this.name} healed all allies for ${Math.floor(healAmount)}`;
+                            document.getElementById("dmgtext").innerText = `${this.name} healed all allies for ${Math.floor(healAmount)}!`;
                         })
                         addTotalDamage(Math.floor((this.skill.modifier * this.stats.hp) * characterList.length))
                         energyGain(this, 20);
@@ -491,13 +492,13 @@ class Baiheng extends Character {
                     let averageHP;
                     characterList.forEach(character => {
                         averageHP = character.currentHP / character.stats.hp
-                });
+                    });
                     averageHP /= characterList.length;
                     characterList.forEach(character => {
-                    character.currentHP = character.stats.hp * averageHP;
-                    healUnit(character, (this.skill.modifier * this.stats.hp) + 205 );
-                    applyBuff(character, "Mending Waters", this)
-                });
+                        character.currentHP = character.stats.hp * averageHP;
+                        healUnit(character, (this.skill.modifier * this.stats.hp) + 205);
+                        applyBuff(character, "Mending Waters", this)
+                    });
 
                 }
                 else {
@@ -533,7 +534,15 @@ class VoidRangerReaver extends Enemy {
 
     async onTurn() {
         await sleep(1000);
-        enemyPreTurn(this)
+        resolveBuffsandDebuffs(this);
+        if (this.isStunned == true) {
+            document.getElementById("infotext").textContent = `${this.name} is stunned!`
+            console.log("Stunned! Turn skipped!")
+            return;
+        }
+        if (this.isBroken == true) {
+            brokenEnemy(this);
+        }
         await sleep(750);
         const chooseAttack = Math.floor(Math.random() * 2);
         let { actualTarget } = enemyRandomTarget();
@@ -602,7 +611,15 @@ class VoidRangerDistorter extends Enemy {
 
     async onTurn() {
         await sleep(1000);
-        enemyPreTurn(this)
+        resolveBuffsandDebuffs(this);
+        if (this.isStunned == true) {
+            document.getElementById("infotext").textContent = `${this.name} is stunned!`
+            console.log("Stunned! Turn skipped!")
+            return;
+        }
+        if (this.isBroken == true) {
+            brokenEnemy(this);
+        }
         await sleep(750);
         let { actualTarget } = enemyRandomTarget();
         characterList.forEach(c => {
@@ -649,18 +666,6 @@ function generateEnemies(num, level) {
     }
     enemyList.push(...selectedEnemies)
 
-}
-
-function enemyPreTurn(unit) {
-    resolveBuffsandDebuffs(unit);
-    if (unit.isStunned == true) {
-        document.getElementById("infotext").textContent = `${unit.name} is stunned!`
-        console.log("Stunned! Turn skipped!")
-        return;
-    }
-    if (unit.isBroken == true) {
-        brokenEnemy(unit);
-    }
 }
 
 function energyGain(target, amount) {
@@ -724,9 +729,10 @@ function showEffects() {
     });
 }
 
-function procDoTs(unit){
-        unit.debuffs.forEach(debuff => {
-        if (debuff.effectdmg) debuff.effectdmg(debuff.applier, unit); } )
+function procDoTs(unit) {
+    unit.debuffs.forEach(debuff => {
+        if (debuff.effectdmg) debuff.effectdmg(debuff.applier, unit);
+    })
 
     checkDeath();
     showEffects();
@@ -752,6 +758,7 @@ function resolveBuffsandDebuffs(unit) {
     unit.debuffs.forEach(debuff => {
         if (debuff.effectdmg) debuff.effectdmg(debuff.applier, unit);
         debuff.duration--;
+        showNotification(DoTDamage);
 
         if (debuff.duration <= 0) {
             if (debuff.revert) debuff.revert(debuff.applier, unit);
@@ -1007,7 +1014,7 @@ function isPlaying(audio) {
 function start() {
     combatOngoing = true;
     const enemyImgs = document.querySelectorAll(".enemy-portrait");
-    enemyImgs.forEach(img => {img.classList.remove('enemy-targeted'); } )
+    enemyImgs.forEach(img => { img.classList.remove('enemy-targeted'); })
     if (characterList.length == 0) {
         createParty();
     }
@@ -1200,7 +1207,7 @@ function updateCharacterStats() {
             statsDiv.textContent = `${character.currentHP} / ${character.stats.hp} HP | ${character.resource} / ${character.resourcemax} Energy`;
         }
     });
-        checkDeath();
+    checkDeath();
 }
 
 function addTotalDamage(dmg) {
@@ -1209,22 +1216,22 @@ function addTotalDamage(dmg) {
 }
 
 function showTotalDamage(amount) {
-    if (amount > 0){
-    const damageText = document.getElementById("totaldamage");
-    damageText.textContent = ("Total Damage", amount);
+    if (amount > 0) {
+        const damageText = document.getElementById("totaldamage");
+        damageText.textContent = ("Total Damage", amount);
 
-    damageText.style.transition = 'none';
-    damageText.style.opacity = 1;
+        damageText.style.transition = 'none';
+        damageText.style.opacity = 1;
 
-    void damageText.offsetWidth;
+        void damageText.offsetWidth;
 
-    damageText.style.transition = 'opacity 1.2s ease-out';
+        damageText.style.transition = 'opacity 1.2s ease-out';
 
-    setTimeout(() => {
-        damageText.style.opacity = 0;
-    }, 500);
-    setTimeout(() => total = 0, 500)
-}
+        setTimeout(() => {
+            damageText.style.opacity = 0;
+        }, 500);
+        setTimeout(() => total = 0, 500)
+    }
 }
 
 function showNotification(text) {
@@ -1296,6 +1303,11 @@ async function checkTurnOrder() {
         document.getElementById("ultimatebutton").disabled = true;
     } else if (characterList.includes(currentUnit)) {
         resolveBuffsandDebuffs(currentUnit);
+        if (currentTurn.currentHP == 0){
+            document.getElementById("infotext").textContent = `${currentUnit.name} is downed!`
+            sleep(500);
+            endTurn();
+        }
         targetEnemies();
         await sleep(1000);
 
@@ -1342,8 +1354,8 @@ function endBasic() {
 
 function startSkill() {
     defaultTarget();
-    if (sp == 0){
-    showNotification(notEnoughSP)
+    if (sp == 0) {
+        showNotification(notEnoughSP)
     }
 }
 
@@ -1465,7 +1477,6 @@ function dealDoTDamage(attacker, target, DoTMultiplier) {
     let resMultiplier = 1 - (target.stats.resi - attacker.stats.resPen);
     let damage = Math.floor(randomNum * (attackPower * (target.stats.vuln || 1) * defMultiplier * (1 + (attacker.stats.damageBonus || 0)) * (1 - (target.stats.damageMitigation || 0)) * resMultiplier));
     showTotalDamage(damage);
-    showNotification(DoTDamage);
     return damage;
 
 }
@@ -1489,7 +1500,7 @@ function dealBreakDamage(attacker, target) {
     return damage;
 }
 
-function healUnit(unit, amount){
+function healUnit(unit, amount) {
     unit.currentHP += amount;
 }
 
