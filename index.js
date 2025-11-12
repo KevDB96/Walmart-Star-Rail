@@ -353,7 +353,6 @@ class Constance extends Character {
                             }
                             if (enemy.debuffs.some(d => d.id === "Wilt")) {
                                 procDoTs(enemy);
-                                showNotification(DoTDamage);
                             }
                             addTotalDamage(dmg * enemyList.length);
                             applyDebuff(enemy, "Wilt", this);
@@ -388,16 +387,16 @@ class Constance extends Character {
                             procDoTs(enemy);
                         }
                         applyDebuff(enemy, "Wilt", this);
-
+                    checkDeath();
+                    updateCharacterStats();
+                    updateEnemyStats();
 
                     });
+                    sleep(100);
                     this.resource = 5;
                     addTotalDamage(dmg);
                     document.getElementById("dmgtext").innerText = `${this.name} dealt ${dmg} damage to all enemies!`
                     document.getElementById("ultimatebutton").disabled = true;
-                    checkDeath();
-                    updateCharacterStats();
-                    updateEnemyStats();
                     endUltimate();
                 }
                 else {
@@ -733,7 +732,7 @@ function procDoTs(unit) {
     unit.debuffs.forEach(debuff => {
         if (debuff.effectdmg) debuff.effectdmg(debuff.applier, unit);
     })
-
+    showNotification(DoTDamage);
     checkDeath();
     showEffects();
     updateCharacterStats();
@@ -756,9 +755,10 @@ function resolveBuffsandDebuffs(unit) {
     unit.buffs = unit.buffs.filter(b => b.duration > 0);
 
     unit.debuffs.forEach(debuff => {
-        if (debuff.effectdmg) debuff.effectdmg(debuff.applier, unit);
+        if (debuff.effectdmg) {debuff.effectdmg(debuff.applier, unit);
+            if (debuff.effectdmg(debuff.applier, unit) != 0) showNotification(DoTDamage);
+        }
         debuff.duration--;
-        showNotification(DoTDamage);
 
         if (debuff.duration <= 0) {
             if (debuff.revert) debuff.revert(debuff.applier, unit);
@@ -1283,8 +1283,32 @@ async function checkTurnOrder() {
     }
     const currentUnit = turnOrder[turnOrderCheck];
     currentTurn = currentUnit;
-
     if (!currentUnit) return;
+
+    characterList.forEach((char, i) => {
+        const charImage = document.getElementById(`char${i + 1}`);
+        if (charImage) charImage.classList.remove("active-turn");
+    });
+
+    enemyList.forEach((enemy, i) => {
+        const charImage = document.getElementById(`enemy${i + 1}`);
+        if (charImage) charImage.classList.remove("active-turn");
+    });
+
+    if (characterList.includes(currentTurn)) {
+        const charIndex = characterList.indexOf(currentUnit);
+        if (charIndex !== -1) {
+            const currentCharImage = document.getElementById(`char${charIndex + 1}`);
+            if (currentCharImage) currentCharImage.classList.add("active-turn");
+        }
+    } else {
+
+        const enemyIndex = enemyList.indexOf(currentUnit);
+        if (enemyIndex !== -1) {
+            const currentCharImage = document.getElementById(`enemy${enemyIndex + 1}`);
+            if (currentCharImage) currentCharImage.classList.add("active-turn");
+        }
+    }
 
     checkEndCombat();
     if (combatOngoing === false) {
@@ -1303,7 +1327,7 @@ async function checkTurnOrder() {
         document.getElementById("ultimatebutton").disabled = true;
     } else if (characterList.includes(currentUnit)) {
         resolveBuffsandDebuffs(currentUnit);
-        if (currentTurn.currentHP == 0){
+        if (currentTurn.currentHP == 0) {
             document.getElementById("infotext").textContent = `${currentUnit.name} is downed!`
             sleep(500);
             endTurn();

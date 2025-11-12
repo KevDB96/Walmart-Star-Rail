@@ -123,7 +123,7 @@ body {
 #text-center {
     position: fixed;
     top: 50%;
-    left: 75%;
+    left: 50%;
     transform: translate(-50%, -50%);
     display: flex;
     flex-direction: column;
@@ -146,7 +146,7 @@ body {
 #totaldamage {
     position: fixed;
     top: 400px;
-    left: 65%;
+    left: 70%;
     transform: translateX(-75%);
     font-size: 48px;
     text-align: center;
@@ -161,7 +161,7 @@ body {
 #notification {
     position: fixed;
     top: 350px;
-    left: 65%;
+    left: 70%;
     transform: translateX(-50%);
     font-size: 22px;
     text-align: center;
@@ -338,4 +338,18 @@ body {
     height: 25px;
     object-fit: contain;
     margin-bottom: 5px;
+}
+
+.characterimage.active-turn {
+    box-shadow: 0 8px 20px 4px rgba(0, 255, 0, 0.6);
+    animation: pulseGlow 2.5s ease-in-out infinite;
+}
+
+@keyframes pulseGlow {
+    0%, 100% {
+        box-shadow: 0 8px 30px 4px rgba(255, 255, 255, 0.5);
+    }
+    50% {
+        box-shadow: 0 10px 50px 6px rgba(0, 255, 0, 0.9);
+    }
 }
