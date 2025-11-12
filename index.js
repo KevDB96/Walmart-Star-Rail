@@ -45,8 +45,8 @@ const debuffList = [
 ]
     ;
 const buffList = [
-    { id: "Rushing Waters", name: "Rushing Waters", src: "Ability_Singing_Among_Clouds.webp", description: `Baiheng has increased her speed by 25%`, duration: 1, baseChance: 1, effect1: (attacker, unit) => { unit.speed *= 1.25 }, revert: (attacker, unit) => { unit.speed /= 1.25 }, applier: "" },
-    { id: "Mending Waters", name: "Mending Waters", src: "Ability_Gourdful_of_Elixir.webp", description: `This unit will be healed at the start of their next turn`, duration: 3, effect: (attacker, unit, applier) => { unit.currentHP += Math.floor((0.06 * applier.stats.hp) + 50) }, applier: "" }
+    { id: "Rushing Waters", name: "Rushing Waters", src: "Ability_Singing_Among_Clouds.webp", description: `Baiheng has increased her speed by 25%`, duration: 1, revert: (attacker, unit) => { unit.stats.speed /= 1.25 }, applier: "" },
+    { id: "Mending Waters", name: "Mending Waters", src: "Ability_Gourdful_of_Elixir.webp", sfx: "084373_heal-36672.mp3", description: `This unit will be healed at the start of their next turn`, duration: 3, effect: (attacker, unit, applier) => { unit.currentHP += Math.floor((0.06 * applier.stats.hp) + 50) }, applier: "" }
 ];
 const bgmList = [
     { name: "Scarab King", src: "Aberrant Receptacle • Starcrusher Swarm King Boss Theme (Extended) Perfect Loop- HSR Version 1.6 OST [EjCeuPEq4ro].mp3" },
@@ -375,10 +375,11 @@ class Constance extends Character {
                     flashUltimate(this);
                     enemyList.forEach(enemy => {
                         const dmg = dealDamage(this, enemy, this.ultimate.modifier);
+                        enemy.currentHP -= dmg;
+                        addTotalDamage(dmg);
                         if (enemy.weaknesses.some(w => w.weakness === this.element)) {
                             toughnessDamage(enemy, (20 * this.breakeffect))
                         }
-                        enemy.currentHP -= dmg;
                         if (enemy.debuffs.some(d => d.id === "Wilt")) {
                             applyDebuff(enemy, "Ruin", this);
                         }
@@ -394,8 +395,7 @@ class Constance extends Character {
                     });
                     sleep(100);
                     this.resource = 5;
-                    addTotalDamage(dmg);
-                    document.getElementById("dmgtext").innerText = `${this.name} dealt ${dmg} damage to all enemies!`
+                    document.getElementById("dmgtext").innerText = `${this.name} dealt ${total} damage to all enemies!`
                     document.getElementById("ultimatebutton").disabled = true;
                     endUltimate();
                 }
@@ -434,6 +434,9 @@ class Baiheng extends Character {
             modifier: 0.75,
             sfx: new Audio("mixkit-water-splash-1311.wav"),
             execute: (targets) => {
+                if (this.buffs.some(b => b.id = "Rushing Waters")){
+                    this.stats.speed /= 1.25;
+                }
                 const target = targets[0];
                 this.basic.sfx.play();
                 const dmg = dealDamage(this, target, this.basic.modifier);
@@ -448,9 +451,8 @@ class Baiheng extends Character {
                 }
                 document.getElementById("dmgtext").innerText = `${this.name} dealt ${dmg} damage to ${target.name}!`;
                 applyBuff(this, "Rushing Waters", this);
-                this.speed *= 1.25;
+                this.stats.speed *= 1.25;
                 showEffects();
-                console.log(this, buffList);
                 addTotalDamage(dmg);
                 endBasic();
             }
@@ -747,9 +749,9 @@ function resolveBuffsandDebuffs(unit) {
         if (buff.effect) buff.effect(buff.applier, unit, buff.applier);
         buff.duration--;
 
-        if (buff.duration <= 0) {
-            if (buff.revert) buff.revert(buff.applier, unit);
-        }
+        if (buff.duration <= 0 && buff.revert) buff.revert(buff.applier, unit);
+        if (buff.sfx) new Audio(buff.sfx).play();
+
     });
 
     unit.buffs = unit.buffs.filter(b => b.duration > 0);
@@ -1018,9 +1020,9 @@ function start() {
     if (characterList.length == 0) {
         createParty();
     }
-    generateEnemies(1, 1)
-    generateEnemies(1, 2)
-    generateEnemies(1, 3)
+    generateEnemies(1, 5)
+    generateEnemies(1, 5)
+    generateEnemies(1, 5)
     setBackground();
     if (!isPlaying(bgm)) {
         let randomIndex = Math.floor(Math.random() * bgmList.length);
@@ -1049,22 +1051,13 @@ function start() {
 };
 
 function createParty() {
-    char1 = new DestructionMC(1);
-    char2 = new Constance(1);
-    char3 = new Baiheng(1);
+    char1 = new DestructionMC(5);
+    char2 = new Constance(5);
+    char3 = new Baiheng(5);
     characterList.push(char1);
     characterList.push(char2);
     characterList.push(char3);
 }
-
-function createEnemy() {
-    let enemy1, enemy2, enemy3, enemy4, enemy5;
-    enemy1 = new VoidRangerReaver(1);
-    enemy2 = new VoidRangerReaver(2);
-    enemy3 = new VoidRangerReaver(3);
-    const enemies = [enemy1, enemy2, enemy3, enemy4, enemy5];
-    enemies.forEach(e => e && enemyList.push(e));
-};
 
 pauseMusicButton.onclick = () => {
     if (bgm.paused) {
@@ -1281,6 +1274,7 @@ async function checkTurnOrder() {
         turnOrder = [];
         initializeTurnOrder(characterList, enemyList);
     }
+    console.log(`${turnOrder.map(turn => turn.name)}, ${turnOrder.map(turn => turn.stats.speed)}`);
     const currentUnit = turnOrder[turnOrderCheck];
     currentTurn = currentUnit;
     if (!currentUnit) return;
@@ -1326,6 +1320,7 @@ async function checkTurnOrder() {
         document.getElementById("skillbutton").disabled = true;
         document.getElementById("ultimatebutton").disabled = true;
     } else if (characterList.includes(currentUnit)) {
+        await sleep(1000);
         resolveBuffsandDebuffs(currentUnit);
         if (currentTurn.currentHP == 0) {
             document.getElementById("infotext").textContent = `${currentUnit.name} is downed!`
