@@ -19,7 +19,8 @@ function sleep(ms) {
 }
 const backgroundList = [
     { name: "Herta Space Station", src: "Space_Anchor_Electrical_Room.webp", affiliations: ["Antimatter Legion", "Herta Space Station"] },
-    { name: "Astral Express", src: "2ddeccfe02c63d8b59e96e0b18cee2d6_3750609136158297103.webp", affiliations: ["None", "Astral Express"] }
+    { name: "Astral Express", src: "2ddeccfe02c63d8b59e96e0b18cee2d6_3750609136158297103.webp", affiliations: ["None", "Astral Express", "Neutral"] },
+    { name: "Xianzhou", src: "img_5322.webp", affiliations: ["Xianzhou"] }
 ]
 const backgroundImage = document.getElementById("background");
 let sp = 3;
@@ -30,6 +31,7 @@ let turnOrder = [];
 let characterList = [];
 let enemyList = [];
 let targetList = [];
+let allyTargetList = [];
 let turnOrderCheck = 0;
 const debuffList = [
     { id: "FireBreak", name: "Burn", src: "Icon_Burn.webp", description: `Take Fire damage each turn`, duration: 2, baseChance: 1.5, effect: (attacker, unit) => { unit.currentHP -= 50 * Math.pow(attacker.level, 0.95) }, element: "Fire", applier: "" },
@@ -41,13 +43,18 @@ const debuffList = [
     { id: "ImaginaryBreak", name: "Imprison", src: "Icon_Imprisonment.webp", description: `This unit has reduced speed`, duration: 2, baseChance: 1.5, effect: (attacker, unit) => { unit.speed *= 0.8 }, revert: (attacker, unit) => { unit.speed += (20 * attacker.breakeffect) }, element: "Imaginary", applier: "" },
     { id: "Wilt", name: "Wilt", src: "lick-enkindled-betrayal-skill_icon.webp", description: `Take Fire damage each turn and reduces defense by 20%`, duration: 3, baseChance: 2, effect: (attacker, unit) => { unit.stats.defreduction -= 0.2 }, effectdmg: (attacker, unit) => { unit.currentHP -= dealDoTDamage(attacker, unit, 1) }, revert: (attacker, unit) => { unit.stats.defreduction += 0.2 }, applier: "" },
     { id: "Ruin", name: "Ruin", src: "wallowentombed-ash-skill_icon.webp", description: `Take Fire damage each turn and reduces defense by 20%`, duration: 3, baseChance: 2.5, effect: (attacker, unit) => { unit.stats.defreduction -= 0.2 }, effectdmg: (attacker, unit) => { unit.currentHP -= dealDoTDamage(attacker, unit, 1) }, revert: (attacker, unit) => { unit.stats.defreduction += 0.2 }, applier: "" },
-    { id: "Nihility's Command", name: "Nihility's Command", src: "internet-keyword-targeting-seo-target-icon--22.png", description: `Targeted for a massive attack and taking 10% increased damage`, duration: 2, baseChance: 1, effect: (attacker, unit) => { unit.stats.defreduction -= 0.1 }, revert: (attacker, unit) => { unit.stats.defreduction += 0.1 }, applier: "" }
+    { id: "Nihility's Command", name: "Nihility's Command", src: "internet-keyword-targeting-seo-target-icon--22.png", description: `Targeted for a massive attack and taking 10% increased damage`, duration: 2, baseChance: 1, effect: (attacker, unit) => { unit.stats.defreduction -= 0.1 }, revert: (attacker, unit) => { unit.stats.defreduction += 0.1 }, applier: "" },
+    { id: "Cut!", name: "Cut!", src: "145065.png", description: `Mr Reca has slowed this unit by 10%`, duration: 1, revert: (attacker, unit) => { unit.stats.speed /= 0.9 }, applier: "" },
+    { id: "Ready, Set, Action!", name: "Ready, Set, Action!", src: "mrrecawhite-removebg-preview.png", description: `Mr Reca has slowed this unit down by 25%`, duration: 2, revert: (attacker, unit, applier) => { unit.stats.speed *= 1.25 }, applier: "" },
 ]
     ;
 const buffList = [
     { id: "Rushing Waters", name: "Rushing Waters", src: "Ability_Singing_Among_Clouds.webp", description: `Baiheng has increased her speed by 25%`, duration: 1, revert: (attacker, unit) => { unit.stats.speed /= 1.25 }, applier: "" },
-    { id: "Mending Waters", name: "Mending Waters", src: "Ability_Gourdful_of_Elixir.webp", sfx: "084373_heal-36672.mp3", description: `This unit will be healed at the start of their next turn`, duration: 3, effect: (attacker, unit, applier) => { unit.currentHP += Math.floor((0.06 * applier.stats.hp) + 50) }, applier: "" }
+    { id: "Mending Waters", name: "Mending Waters", src: "Ability_Gourdful_of_Elixir.webp", sfx: "084373_heal-36672.mp3", description: `This unit will be healed at the start of their next turn`, duration: 3, effect: (attacker, unit, applier) => { unit.currentHP += Math.floor((0.06 * applier.stats.hp) + 50) }, applier: "" },
+    { id: "Run It Back!", name: "Run It Back!", src: "pngtree-fast-forward-icon-image_1128381-removebg-preview.png", description: `Increases damage bonus by 75%`, duration: 2, effect: (attacker, unit, applier) => { unit.stats.damageBonus += 0.8 }, revert: (attacker, unit, applier) => { unit.stats.damageBonus -= 0.8 }, applier: "" },
+    { id: "Ready, Set, Action!", name: "Ready, Set, Action!", src: "mrrecawhite-removebg-preview.png", description: `Mr Reca has sped this unit up by 33%`, duration: 2, revert: (attacker, unit, applier) => { unit.stats.speed /= 1.33 }, applier: "" },
 ];
+
 const bgmList = [
     { name: "Scarab King", src: "Aberrant Receptacle • Starcrusher Swarm King Boss Theme (Extended) Perfect Loop- HSR Version 1.6 OST [EjCeuPEq4ro].mp3" },
     { name: "Lygus", src: "Lygus Boss Theme (Extended) - Honkai_ Star Rail 3.5 OST.mp3" },
@@ -286,6 +293,7 @@ class DestructionMC extends Character {
                 }
                 else {
                     showNotification(notEnoughEnergy);
+                    ultimateButton.style.disabled = true;
                 }
             },
         };
@@ -368,7 +376,7 @@ class Constance extends Character {
         this.ultimate = {
             name: "Darkflame Bloom",
             description: "Deal Fire damage all enemy targets and apply 'Wilt' to all targets, if they already have 'Wilt', apply 'Ruin'. If they already have 'Ruin', all damaging DoTs take effect twice. ",
-            modifier: 2,
+            modifier: 1.6,
             sfx: new Audio("VO_JA_Evernight_Ultimate_-_Activate_01.ogg"),
             execute: () => {
                 if (this.resource >= this.resourcemax) {
@@ -380,17 +388,18 @@ class Constance extends Character {
                         if (enemy.weaknesses.some(w => w.weakness === this.element)) {
                             toughnessDamage(enemy, (20 * this.breakeffect))
                         }
-                        if (enemy.debuffs.some(d => d.id === "Wilt")) {
-                            applyDebuff(enemy, "Ruin", this);
-                        }
                         if (enemy.debuffs.some(d => d.id === "Ruin")) {
                             procDoTs(enemy);
                             procDoTs(enemy);
                         }
+                        if (enemy.debuffs.some(d => d.id === "Wilt")) {
+                            applyDebuff(enemy, "Ruin", this);
+                        }
+                        
                         applyDebuff(enemy, "Wilt", this);
-                    checkDeath();
-                    updateCharacterStats();
-                    updateEnemyStats();
+                        checkDeath();
+                        updateCharacterStats();
+                        updateEnemyStats();
 
                     });
                     sleep(100);
@@ -401,6 +410,7 @@ class Constance extends Character {
                 }
                 else {
                     showNotification(notEnoughEnergy);
+                    ultimateButton.style.disabled = true;
                 }
             },
         };
@@ -434,9 +444,6 @@ class Baiheng extends Character {
             modifier: 0.75,
             sfx: new Audio("mixkit-water-splash-1311.wav"),
             execute: (targets) => {
-                if (this.buffs.some(b => b.id = "Rushing Waters")){
-                    this.stats.speed /= 1.25;
-                }
                 const target = targets[0];
                 this.basic.sfx.play();
                 const dmg = dealDamage(this, target, this.basic.modifier);
@@ -466,7 +473,7 @@ class Baiheng extends Character {
                 execute: () => {
                     if (sp != 0) {
                         this.skill.sfx.play();
-                        const healAmount = ((this.skill.modifier * this.stats.hp) + 205);
+                        const healAmount = ((this.skill.modifier * this.stats.hp) + (this.level * 10));
                         characterList.forEach(character => {
                             healUnit(character, healAmount);
                             applyBuff(character, "Mending Waters", this)
@@ -500,10 +507,134 @@ class Baiheng extends Character {
                         healUnit(character, (this.skill.modifier * this.stats.hp) + 205);
                         applyBuff(character, "Mending Waters", this)
                     });
+                    this.resource = 5;
 
                 }
                 else {
                     showNotification(notEnoughEnergy);
+                    ultimateButton.style.disabled = true;
+                }
+            },
+        };
+    }
+}
+
+class MrReca extends Character {
+    constructor(level) {
+        super({
+            name: "Mr. Reca",
+            img: "MrReca-removebg-preview.png",
+            level: level,
+            affiliation: "Neutral",
+            star: "5*",
+            path: "Harmony",
+            element: "Quantum",
+            resource: 25,
+            resourcemax: 130,
+            basehp: 170,
+            baseatk: 87,
+            basedef: 72,
+            speed: 98,
+            hpgrowth: 11,
+            atkgrowth: 7,
+            defgrowth: 6,
+        });
+
+        this.basic = {
+            name: "Cut!",
+            description: "Deal Quantum damage to one enemy and reduce their speed by 10%.",
+            modifier: 0.25,
+            sfx: new Audio("Clapper-sound-effect.mp3"),
+            execute: (targets) => {
+                const target = targets[0];
+                this.basic.sfx.play();
+                const dmg = dealDamage(this, target, this.basic.modifier);
+                target.currentHP -= dmg;
+                if (target.weaknesses.some(w => w.weakness === this.element)) {
+                    toughnessDamage(target, (15 * this.breakeffect))
+                }
+                energyGain(this, 10);
+                if (sp < spmax) {
+                    sp++;
+                    document.getElementById("currentsp").innerText = sp;
+                }
+                document.getElementById("dmgtext").innerText = `${this.name} dealt ${dmg} damage to ${target.name}!`;
+                console.log(target.stats.speed);
+                applyDebuff(target, "Cut!", this);
+                target.stats.speed *= 0.9;
+                console.log(target.stats.speed);
+                showEffects();
+                addTotalDamage(dmg);
+                endBasic();
+            }
+        },
+
+            this.skill = {
+                name: "Run It Back!",
+                description: "Allows the currently targetted ally to immediately take action!",
+                modifier: 0,
+                sfx: new Audio("Fast Forward Sound Effect.mp3"),
+                execute: async () => {
+                    console.log(turnOrder);
+                    if (!allyTargetList[0]) {
+                        showNotification("Target an ally first!");
+                        return;
+                    }
+                    if (sp != 0) {
+                        console.log(turnOrder);
+                        this.skill.sfx.play();
+                        energyGain(this, 300);
+                        document.getElementById("infotext").innerText = `${this.name} advanced ${allyTargetList[0].name}'s action!`
+                        let index = turnOrder.findIndex(turn => turn.name === currentTurn.name);
+                        if (index !== -1) {
+                            turnOrder.splice(index, 1);
+                        }
+                        await sleep(750);
+                        currentTurn = allyTargetList[0];
+                        document.getElementById("infotext").innerText = `It's ${currentTurn.name}'s turn!`
+                        sp--;
+                        document.getElementById("currentsp").innerText = sp;
+                        applyBuff(currentTurn, "Run It Back!", this)
+                        setTurnIndicator();
+                        index = turnOrder.findIndex(turn => turn.name === currentTurn.name);
+                        if (index !== -1) {
+                            turnOrder.splice(index, 1);
+                            turnOrder.splice(turnOrderCheck, 0, currentTurn);
+}
+                        console.log(turnOrder);
+                    }
+                    showEffects();
+                    updateCharacterStats();
+                    setTooltipAbilities(allyTargetList[0]);
+                }
+            }
+
+        this.ultimate = {
+            name: "Ready, Set, Action!",
+            description: "Increases the speed of all allies by 33% and slows enemies down by 25% for 2 turns. ",
+            modifier: 0,
+            sfx: new Audio("VO_JA_Anaxa_Technique_01.ogg"),
+            execute: () => {
+                if (this.resource >= this.resourcemax) {
+                    console.log(turnOrder.map(u => u.stats.speed))
+                    this.ultimate.sfx.play();
+                    flashUltimate(this);
+                    characterList.forEach(character => {
+                        applyBuff(character, "Ready, Set, Action!", this)
+                        character.stats.speed *= 1.33;
+                    })
+
+                    enemyList.forEach(enemy => {
+                        enemy.stats.speed *= 0.75;
+                        applyDebuff(enemy, "Ready, Set, Action!", this)
+                    });
+                    console.log(turnOrder.map(u => u.stats.speed))
+                    this.resource = 5;
+
+                }
+                else {
+                    showNotification(notEnoughEnergy);
+                    ultimateButton.style.disabled = true;
                 }
             },
         };
@@ -514,7 +645,7 @@ class VoidRangerReaver extends Enemy {
     constructor(level) {
         super({
             name: "Voidranger: Reaver",
-            img: "Voidranger Reaver.png",
+            img: "Voidranger_Reaver-removebg-preview.png",
             level: level,
             affiliation: "Antimatter Legion",
             weaknesses: {
@@ -536,6 +667,12 @@ class VoidRangerReaver extends Enemy {
     async onTurn() {
         await sleep(1000);
         resolveBuffsandDebuffs(this);
+        if (this.currentHP <= 0) {
+            checkDeath();
+            updateCharacterStats();
+            updateEnemyStats()
+            return;
+        }
         if (this.isStunned == true) {
             document.getElementById("infotext").textContent = `${this.name} is stunned!`
             console.log("Stunned! Turn skipped!")
@@ -613,9 +750,14 @@ class VoidRangerDistorter extends Enemy {
     async onTurn() {
         await sleep(1000);
         resolveBuffsandDebuffs(this);
+        if (this.currentHP <= 0) {
+            checkDeath();
+            updateCharacterStats();
+            updateEnemyStats()
+            return;
+        }
         if (this.isStunned == true) {
             document.getElementById("infotext").textContent = `${this.name} is stunned!`
-            console.log("Stunned! Turn skipped!")
             return;
         }
         if (this.isBroken == true) {
@@ -733,6 +875,7 @@ function showEffects() {
 function procDoTs(unit) {
     unit.debuffs.forEach(debuff => {
         if (debuff.effectdmg) debuff.effectdmg(debuff.applier, unit);
+        console.log(debuff.effectdmg)
     })
     showNotification(DoTDamage);
     checkDeath();
@@ -757,8 +900,10 @@ function resolveBuffsandDebuffs(unit) {
     unit.buffs = unit.buffs.filter(b => b.duration > 0);
 
     unit.debuffs.forEach(debuff => {
-        if (debuff.effectdmg) {debuff.effectdmg(debuff.applier, unit);
+        if (debuff.effectdmg) {
+            debuff.effectdmg(debuff.applier, unit);
             if (debuff.effectdmg(debuff.applier, unit) != 0) showNotification(DoTDamage);
+            checkDeath();
         }
         debuff.duration--;
 
@@ -820,7 +965,7 @@ function applyDebuff(unit, debuff, applier) {
     const newDebuff = { ...debuffFind };
     newDebuff.applier = applier;
     unit.debuffs.push(newDebuff);
-    newDebuff.effect(currentTurn, unit, applier)
+    if (newDebuff.effect) newDebuff.effect(currentTurn, unit, applier);
 
 }
 
@@ -867,11 +1012,8 @@ function targetEnemies() {
             const enemy = enemyList[index];
             if (!enemy) return;
 
-            if (selectedTarget) {
-                const prevImg = document.getElementById(`enemy${enemyList.indexOf(selectedTarget) + 1}`);
-                if (prevImg) prevImg.classList.remove('enemy-targeted');
-            }
-
+            const enemyImages = document.querySelectorAll(".enemy-portrait");
+            enemyImages.forEach(e => e.classList.remove('enemy-targeted'))
 
             selectedTarget = enemy;
             img.classList.add('enemy-targeted');
@@ -884,6 +1026,29 @@ function targetEnemies() {
         });
     });
 }
+
+function targetAllies() {
+    const allyImgs = document.querySelectorAll(".characterimage");
+    allyImgs.forEach((img, index) => {
+        img.addEventListener("click", () => {
+            const ally = characterList[index];
+            if (!ally) return;
+
+            const characterImages = document.querySelectorAll(".characterimage");
+            characterImages.forEach(c => c.classList.remove('enemy-targeted'))
+
+            selectedTarget = ally;
+            img.classList.add('enemy-targeted');
+
+            allyTargetList = [ally].filter(a => a);
+            [-2, -1, 1, 2].forEach(offset => {
+                const adj = characterList[index + offset];
+                if (adj) allyTargetList.push(adj);
+            });
+        });
+    });
+}
+
 
 async function brokenEnemy(enemy) {
     await sleep(1000);
@@ -959,7 +1124,7 @@ function setCharacterElementImages() {
     characterList.forEach((char, i) => {
         const characterElement = document.getElementById(`char${i + 1}-element`);
         if (!characterElement) return;
-        characterElement.style.display = "block";
+        characterElement.style.display = "inline-block";
         const element = elementList.find(e => e.name === char.element);
         if (element) {
             characterElement.src = element.img;
@@ -1002,10 +1167,10 @@ function setImages() {
             charImage.style.display = "none";
             if (charStats) charStats.style.display = "none";
             if (charElement) charElement.style.display = "none";
-            updateEnemyWeaknessIcons();
-            showEffects();
-            setCharacterElementImages();
         }
+        updateEnemyWeaknessIcons();
+        showEffects();
+        setCharacterElementImages();
     }
 }
 
@@ -1018,11 +1183,13 @@ function start() {
     const enemyImgs = document.querySelectorAll(".enemy-portrait");
     enemyImgs.forEach(img => { img.classList.remove('enemy-targeted'); })
     if (characterList.length == 0) {
-        createParty();
+        createParty(1);
     }
-    generateEnemies(1, 5)
-    generateEnemies(1, 5)
-    generateEnemies(1, 5)
+    generateEnemies(1, 1)
+    generateEnemies(1, 1)
+    generateEnemies(1, 1)
+    generateEnemies(1, 1)
+    generateEnemies(1, 1)
     setBackground();
     if (!isPlaying(bgm)) {
         let randomIndex = Math.floor(Math.random() * bgmList.length);
@@ -1042,7 +1209,6 @@ function start() {
     elements.forEach(el => {
         el.style.backgroundColor = "rgba(0,0,0,0.3)";
     });
-    checkDeath();
     initializeTurnOrder(characterList, enemyList);
     checkTurnOrder();
     updateEnemyStats();
@@ -1050,13 +1216,15 @@ function start() {
 
 };
 
-function createParty() {
-    char1 = new DestructionMC(5);
-    char2 = new Constance(5);
-    char3 = new Baiheng(5);
+function createParty(level) {
+    char1 = new DestructionMC(level);
+    char2 = new Constance(level);
+    char3 = new Baiheng(level);
+    char4 = new MrReca(level);
     characterList.push(char1);
     characterList.push(char2);
     characterList.push(char3);
+    characterList.push(char4);
 }
 
 pauseMusicButton.onclick = () => {
@@ -1195,6 +1363,8 @@ function updateCharacterStats() {
         if (character.currentHP > character.stats.hp) {
             character.currentHP = character.stats.hp
         }
+
+        character.currentHP = Math.floor(character.currentHP);
         const statsDiv = document.getElementById(`char${i + 1}-stats`);
         if (statsDiv) {
             statsDiv.textContent = `${character.currentHP} / ${character.stats.hp} HP | ${character.resource} / ${character.resourcemax} Energy`;
@@ -1274,7 +1444,6 @@ async function checkTurnOrder() {
         turnOrder = [];
         initializeTurnOrder(characterList, enemyList);
     }
-    console.log(`${turnOrder.map(turn => turn.name)}, ${turnOrder.map(turn => turn.stats.speed)}`);
     const currentUnit = turnOrder[turnOrderCheck];
     currentTurn = currentUnit;
     if (!currentUnit) return;
@@ -1321,6 +1490,7 @@ async function checkTurnOrder() {
         document.getElementById("ultimatebutton").disabled = true;
     } else if (characterList.includes(currentUnit)) {
         await sleep(1000);
+        energyGain(currentTurn, 5);
         resolveBuffsandDebuffs(currentUnit);
         if (currentTurn.currentHP == 0) {
             document.getElementById("infotext").textContent = `${currentUnit.name} is downed!`
@@ -1328,6 +1498,7 @@ async function checkTurnOrder() {
             endTurn();
         }
         targetEnemies();
+        targetAllies();
         await sleep(1000);
 
         document.getElementById("basicatkbutton").disabled = false;
@@ -1335,9 +1506,7 @@ async function checkTurnOrder() {
         if (currentUnit.resource >= currentUnit.resourcemax) {
             document.getElementById("ultimatebutton").disabled = false;
         }
-        document.getElementById("basicatkbutton").title = `${currentUnit.basic.name}: ${currentUnit.basic.description}`;
-        document.getElementById("skillbutton").title = `${currentUnit.skill.name}: ${currentUnit.skill.description}`;
-        document.getElementById("ultimatebutton").title = `${currentUnit.ultimate.name}: ${currentUnit.ultimate.description}`;
+        setTooltipAbilities(currentUnit)
     }
 
     await sleep(100);
@@ -1347,6 +1516,25 @@ async function checkTurnOrder() {
     updateCharacterStats();
 }
 
+function setTooltipAbilities(currentUnit) {
+
+    document.getElementById("basicatkbutton").title = `${currentUnit.basic.name}: ${currentUnit.basic.description}`;
+    document.getElementById("skillbutton").title = `${currentUnit.skill.name}: ${currentUnit.skill.description}`;
+    document.getElementById("ultimatebutton").title = `${currentUnit.ultimate.name}: ${currentUnit.ultimate.description}`;
+}
+
+function setTurnIndicator() {
+    characterList.forEach((char, i) => {
+        const charImage = document.getElementById(`char${i + 1}`);
+        if (charImage) charImage.classList.remove("active-turn");
+    });
+
+    const charIndex = characterList.indexOf(currentTurn);
+    if (charIndex !== -1) {
+        const currentCharImage = document.getElementById(`char${charIndex + 1}`);
+        if (currentCharImage) currentCharImage.classList.add("active-turn");
+    };
+}
 
 function defaultTarget() {
     targetList = targetList.filter(t => t.currentHP > 0);
@@ -1417,6 +1605,12 @@ function checkUpdateEnd() {
 }
 
 function checkDeath() {
+    if (currentTurn.currentHP <= 0) {
+        if (combatOngoing) {
+            turnOrderCheck++;
+            checkTurnOrder();
+        }
+    }
     for (let i = enemyList.length - 1; i >= 0; i--) {
         if (!enemyList[i].isAlive) {
             enemyList.splice(i, 1);
@@ -1426,6 +1620,13 @@ function checkDeath() {
     for (let i = turnOrder.length - 1; i >= 0; i--) {
         if (!turnOrder[i].isAlive) {
             turnOrder.splice(i, 1);
+        }
+    }
+
+    for (let i = characterList.length - 1; i >= 0; i--) {
+        if (characterList[i].currentHP <= 0) {
+            characterList[i].buffs.length = 0;
+            characterList[i].debuffs.length = 0;
         }
     }
 

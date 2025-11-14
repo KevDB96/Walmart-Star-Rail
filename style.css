@@ -2,10 +2,11 @@
     position: fixed;
     top: 10px;
     left: 10px;
-    flex: auto;
+    display: flex;
     flex-direction: row;
-    gap: 20px;
+    gap: 10px;
     z-index: 1000;
+    height: 30px;
 }
 
 #background {
@@ -44,7 +45,14 @@ body {
     justify-content: center;
     flex-wrap: wrap;
     gap: 20px;
-    min-height: 280px
+    min-height: 280px;
+    position: relative;
+    z-index: 2;
+}
+
+.enemies-container {
+    z-index: 3;
+    position: relative;
 }
 
 .enemy-weakness {
@@ -55,6 +63,7 @@ body {
     margin-top: 4px;
     width: auto;
     height: auto;
+    z-index: 4;
 }
 
 .enemy-weakness img {
@@ -78,6 +87,10 @@ body {
 }
 
 .enemy-stats {
+    position: absolute;
+    top: 305px;
+    width: 250px;
+    max-width: 250px;
     font-size: 14px;
     text-align: center;
     margin-top: 2px;
@@ -176,19 +189,14 @@ body {
 .character,
 .enemy {
     background: none;
-}
-
-.character {
     position: relative;
-    display: inline-block;
-    width: 300px;
 }
 
 .character img {
-    width: 100%;
+    width: 90%;
     max-width: 400px;
     height: auto;
-    display: block;
+    display: inline-block;
     border-radius: 10px;
 }
 
@@ -197,7 +205,7 @@ body {
     max-width: 400px;
     height: auto;
     max-height: 800px;
-    display: block;
+    display: inline-block;
     border-radius: 10px;
 }
 
@@ -286,6 +294,8 @@ body {
     flex-direction: column;
     align-items: center;
     margin-bottom: 40px;
+    width: 300px;
+    z-index: 2
 }
 
 .character-stats {
