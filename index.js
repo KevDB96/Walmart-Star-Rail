@@ -1777,9 +1777,9 @@ function healUnit(unit, amount) {
 
     unit.currentHP += amount;
 
-    characterList.forEach((c, i) => {
+    characterList.forEach((char, i) => {
         const currentCharImage = document.getElementById(`char${i + 1}`);
-        if (currentCharImage) currentCharImage.classList.remove("active-turn");
+        if (currentCharImage) currentCharImage.classList.remove("downed");
     });
 }
 
