@@ -320,6 +320,8 @@ body {
 
 .character-buffs,
 .character-debuffs {
+    display: flex;
+    flex-wrap: nowrap;
     gap: 4px;
     position: absolute;
     bottom: -45px;
@@ -333,7 +335,7 @@ body {
 }
 
 .character-debuffs {
-    left: 250px;
+    left: 180px;
     width: 120px;
     margin-top: 5px;
     justify-content: flex-end;
@@ -341,7 +343,7 @@ body {
 
 .character-buff,
 .character-debuff {
-    width: 20px;
+    width: 100px;
     height: 100px;
     max-height: 110px;
     object-fit: contain;

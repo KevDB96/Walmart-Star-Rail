@@ -53,7 +53,7 @@ const debuffList = [
     ;
 const buffList = [
     { id: "Rushing Waters", name: "Rushing Waters", src: "Ability_Singing_Among_Clouds.webp", description: `Baiheng has increased her speed by 25%`, duration: 1, revert: (attacker, unit) => { unit.stats.speed /= 1.25 }, applier: "", event: "" },
-    { id: "Mending Waters", name: "Mending Waters", src: "Ability_Gourdful_of_Elixir.webp", sfx: "084373_heal-36672.mp3", description: `This unit will be healed at the start of their next turn`, duration: 3, effect: (attacker, unit, applier) => { unit.currentHP += Math.floor((0.06 * applier.stats.hp) + 50) }, applier: "", event: "healAlly" },
+    { id: "Mending Waters", name: "Mending Waters", src: "Ability_Gourdful_of_Elixir.webp", sfx: "084373_heal-36672.mp3", description: `This unit will be healed at the start of their next turn`, duration: 3, effect: (attacker, unit, applier) => { unit.currentHP += Math.floor((0.08 * applier.stats.hp) + 50) }, applier: "", event: "healAlly" },
     { id: "Run It Back!", name: "Run It Back!", src: "pngtree-fast-forward-icon-image_1128381-removebg-preview.png", description: `Increases damage bonus by 75%`, duration: 2, effect: (attacker, unit, applier) => { unit.stats.damageBonus += 0.8 }, revert: (attacker, unit, applier) => { unit.stats.damageBonus -= 0.8 }, applier: "", event: "" },
     { id: "Ready, Set, Action!", name: "Ready, Set, Action!", src: "mrrecawhite-removebg-preview.png", description: `Mr Reca has sped this unit up by 33%`, duration: 2, revert: (attacker, unit, applier) => { unit.stats.speed /= 1.33 }, applier: "", event: "" },
 ];
@@ -489,7 +489,7 @@ class Baiheng extends Character {
             this.skill = {
                 name: "Mending of the Tides",
                 description: "Heal all allies and apply a Healing-Over-Time effect, based on Baiheng's max HP",
-                modifier: 0.3,
+                modifier: 0.35,
                 sfx: new Audio("mixkit-video-game-magic-potion-2830.wav"),
                 execute: () => {
                     if (sp != 0) {
@@ -514,7 +514,7 @@ class Baiheng extends Character {
         this.ultimate = {
             name: "Water, The Great Equalizer",
             description: "Averages out all allies' HP percentage, then heal for a large amount and apply Mending Waters. ",
-            modifier: 0.6,
+            modifier: 0.7,
             sfx: new Audio("mixkit-jump-into-the-water-1180.wav"),
             execute: () => {
                 if (this.resource >= this.resourcemax) {
@@ -602,8 +602,8 @@ class MrReca extends Character {
         },
 
             this.skill = {
-                name: "Run It Back!",
-                description: "Allows the currently targetted ally to immediately take action!",
+                name: "We'll do it live!",
+                description: "Allows the currently targetted ally to immediately take action and grants a massive damage boost!",
                 modifier: 0,
                 sfx: new Audio("Fast Forward Sound Effect.mp3"),
                 execute: async () => {
@@ -613,7 +613,8 @@ class MrReca extends Character {
                     }
                     if (sp != 0) {
                         this.skill.sfx.play();
-                        energyGain(this, 300);
+                        energyGain(this, 30);
+                        ultimateButton.disabled = false;
                         document.getElementById("infotext").innerText = `${this.name} advanced ${allyTargetList[0].name}'s action!`
                         await sleep(750);
                         currentTurn = allyTargetList[0];
