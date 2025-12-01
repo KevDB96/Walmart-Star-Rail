@@ -1,5 +1,6 @@
 const bgm = document.getElementById("bgm");
 const notification = document.getElementById("notification");
+const difficultyInput = document.getElementById("difficulty");
 const startButton = document.getElementById("start");
 const basicAtkButton = document.getElementById("basicatkbutton");
 const skillButton = document.getElementById("skillbutton");
@@ -46,7 +47,7 @@ const debuffList = [
     { id: "ImaginaryBreak", name: "Imprison", src: "Icon_Imprisonment.webp", description: `This unit has reduced speed`, duration: 2, baseChance: 1.5, effect: (attacker, unit) => { unit.speed *= 0.8 }, revert: (attacker, unit) => { unit.speed += (20 * attacker.breakeffect) }, element: "Imaginary", applier: "", event: "" },
     { id: "Wilt", name: "Wilt", src: "lick-enkindled-betrayal-skill_icon.webp", description: `Take Fire damage each turn and reduces defense by 20%`, duration: 3, baseChance: 2, effect: (attacker, unit) => { unit.stats.defreduction -= 0.2 }, effectdmg: (attacker, unit) => { unit.currentHP -= dealDoTDamage(attacker, unit, 1) }, revert: (attacker, unit) => { unit.stats.defreduction += 0.2 }, applier: "", event: "DoT" },
     { id: "Ruin", name: "Ruin", src: "wallowentombed-ash-skill_icon.webp", description: `Take Fire damage each turn and reduces defense by 20%`, duration: 3, baseChance: 2.5, effect: (attacker, unit) => { unit.stats.defreduction -= 0.2 }, effectdmg: (attacker, unit) => { unit.currentHP -= dealDoTDamage(attacker, unit, 1) }, revert: (attacker, unit) => { unit.stats.defreduction += 0.2 }, applier: "", event: "DoT" },
-    { id: "Nihility's Command", name: "Nihility's Command", src: "internet-keyword-targeting-seo-target-icon--22.png", description: `Targeted for a massive attack and taking 10% increased damage`, duration: 2, baseChance: 1, effect: (attacker, unit) => { unit.stats.defreduction -= 0.1 }, revert: (attacker, unit) => { unit.stats.defreduction += 0.1 }, applier: "", event: "" },
+    { id: "Nihility's Command", name: "Nihility's Command", src: "internet-keyword-targeting-seo-target-icon--22.png", description: `Targeted for a massive attack and taking 10% increased damage`, duration: 10, baseChance: 1, effect: (attacker, unit) => { unit.stats.defreduction -= 0.1 }, revert: (attacker, unit) => { unit.stats.defreduction += 0.1 }, applier: "", event: "" },
     { id: "Cut!", name: "Cut!", src: "145065.png", description: `Mr Reca has slowed this unit by 10%`, duration: 1, revert: (attacker, unit) => { unit.stats.speed /= 0.9 }, applier: "", event: "" },
     { id: "Ready, Set, Action!", name: "Ready, Set, Action!", src: "mrrecawhite-removebg-preview.png", description: `Mr Reca has slowed this unit down by 25%`, duration: 2, revert: (attacker, unit, applier) => { unit.stats.speed *= 1.25 }, applier: "", event: "" },
 ]
@@ -235,8 +236,8 @@ class DestructionMC extends Character {
             this.skill = {
                 name: "Home Run Hit",
                 description: "Deal Physical damage to one designated enemy and adjacent targets.",
-                modifier1: 1.5,
-                modifier2: 0.75,
+                modifier1: 1.3,
+                modifier2: 0.9,
                 sfx: new Audio("Minecraft Fall Damage (Crack) - Sound Effect (HD).mp3"),
                 execute: (targets) => {
                     if (sp != 0) {
@@ -618,6 +619,7 @@ class MrReca extends Character {
                         document.getElementById("infotext").innerText = `${this.name} advanced ${allyTargetList[0].name}'s action!`
                         await sleep(750);
                         currentTurn = allyTargetList[0];
+                        currentTurn.resource += 5;
                         document.getElementById("infotext").innerText = `It's ${currentTurn.name}'s turn!`
                         sp--;
                         document.getElementById("currentsp").innerText = sp;
@@ -819,7 +821,7 @@ class VoidRangerDistorter extends Enemy {
             actualTarget.currentHP -= dmg
             energyGain(actualTarget, 15);
             document.getElementById("dmgtext").innerText = `${this.name} dealt ${dmg} damage to ${actualTarget.name}!`
-            actualTarget.debuffs.find(d => d.id === "Nihility's Command").duration--;
+            actualTarget.debuffs.find(d => d.id === "Nihility's Command").duration = 0;
         }
         else {
             // Nihility's Command
@@ -1223,7 +1225,7 @@ async function start() {
     combatOngoing = true;
     const enemyImgs = document.querySelectorAll(".enemy-portrait");
     enemyImgs.forEach(img => { img.classList.remove('enemy-targeted'); })
-    difficultyLevel = Number(document.getElementById("difficulty").value);
+    difficultyLevel = Number(difficultyInput.value);
     document.getElementById("difficultyIndicatorText").textContent = "Difficulty Level: ";
     document.getElementById("difficultyIndicatorNumber").style.display = "inline-block";
     document.getElementById("difficultyIndicatorNumber").textContent = difficultyLevel;
@@ -1231,9 +1233,11 @@ async function start() {
         showNotification("Can't be lower than 1 or higher than 1000");
         return;
     }
+    characterList.length = 0;
     if (characterList.length == 0) {
         createParty(difficultyLevel);
     }
+    enemyList.length = 0;
     generateEnemies(5, difficultyLevel);
     setBackground();
     if (!isPlaying(bgm)) {
@@ -1244,7 +1248,7 @@ async function start() {
     }
     setImages();
     startButton.style.display = "none";
-    document.getElementById("difficulty").style.display = "none";
+    difficultyInput.style.display = "none";
     basicAtkButton.style.display = "inline-block";
     skillButton.style.display = "inline-block";
     ultimateButton.style.display = "inline-block";
@@ -1345,6 +1349,7 @@ function checkEndCombat() {
         document.getElementById("infotext").textContent = `DEFEAT!`;
         document.getElementById("dmgtext").textContent = ``;
         startButton.style.display = "block";
+        difficultyInput.style.display = "block";
         basicAtkButton.disabled = true;
         skillButton.disabled = true;
         ultimateButton.disabled = true;
