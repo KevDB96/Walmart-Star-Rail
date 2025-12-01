@@ -670,12 +670,14 @@ class MrReca extends Character {
         };
 
         this.passive = {
-            effect:
-                document.addEventListener("turnStart", () => {
-                    this.damageStack += 1.5 * this.level
-                })
-
-        }
+            effect: () => {
+                const charLevel = this.level;
+                document.addEventListener("turnStart", () => { this.damageStack += 0.1 * charLevel; })
+                    ;
+            }
+        }; 
+        this.damageStack = 0;
+        this.passive.effect()
 
     }
 }
@@ -1200,6 +1202,9 @@ function setImages() {
         if (char && char.img) {
             charImage.src = char.img;
             charImage.style.display = "block";
+            if (char.currentHP == 0){
+                charImage.classList.add("downed");
+            }
             if (charStats) charStats.style.display = "block";
             if (charElement) charElement.style.display = "block";
             charImage.title = `${char.name}: ${char.path}`;

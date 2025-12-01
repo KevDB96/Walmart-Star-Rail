@@ -367,10 +367,23 @@ body {
     animation: pulseGlow 2.5s ease-in-out infinite;
 }
 
+.characterimage.downed {
+    filter: grayscale(100%);
+    opacity: 0.5;
+}
+
+.enemy-portrait.active-turn {
+    box-shadow: 0 8px 20px 4px rgba(0, 255, 0, 0.6);
+    animation: pulseGlow 2.5s ease-in-out infinite;
+}
+
 @keyframes pulseGlow {
-    0%, 100% {
+
+    0%,
+    100% {
         box-shadow: 0 8px 30px 4px rgba(255, 255, 255, 0.5);
     }
+
     50% {
         box-shadow: 0 10px 50px 6px rgba(0, 255, 0, 0.9);
     }
