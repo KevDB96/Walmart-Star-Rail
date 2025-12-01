@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Walmart Star Rail</title>
+        <link rel="icon" href="C:\Users\Kevin\Downloads\icons8-favicon-50.png" type="image/x-icon">
+        <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+        <audio id="bgm" src=""></audio>
+        <audio id="voiceline" src=""></audio>
+        <audio id="sfx" src=""></audio>
+        <img id="background" src="zf4z6utfezua1.png">
+
+
+        <div id="music">
+                <button id="pauseMusic">Pause/Play</button>
+                <div id="volumeControl">
+                        <button id="volumeUp">↑</button>
+                        <div id="volumePercent">30%</div>
+                        <button id="volumeDown">↓</button>
+                </div>
+                <button id="changeMusic">Random Song</button>
+        </div>
+        <div id="difficultyIndicator">
+                <p id="difficultyIndicatorText">Difficulty Level:</p>
+                <p id="difficultyIndicatorNumber"></p>
+        </div>
+
+        <div id="characterSelect">
+                
+        </div>
+
+        <p id="totaldamage"></p>
+        <p id="notification"></p>
+        <div id="game-area">
+                <div class="enemies-container">
+                        <div class="enemy" id="enemy1-container">
+                                <div class="enemy-weakness" id="enemy1-weakness">
+                                        <img id="enemy1-weakness1" src="">
+                                        <img id="enemy1-weakness2" src="">
+                                        <img id="enemy1-weakness3" src="">
+                                        <div id="enemy1-debuffs" class="enemy-debuffs">
+                                                <img class="enemy-debuff" id="enemy1-debuff1" src="" title="">
+                                                <img class="enemy-debuff" id="enemy1-debuff2" src="" title="">
+                                                <img class="enemy-debuff" id="enemy1-debuff3" src="" title="">
+                                                <img class="enemy-debuff" id="enemy1-debuff4" src="" title="">
+                                                <img class="enemy-debuff" id="enemy1-debuff5" src="" title="">
+                                        </div>
+
+                                </div>
+                                <img id="enemy1" class="enemy-portrait" src="">
+                                <div class="enemy-stats" id="enemy1-stats"></div>
+                                <div id="enemy1-buffs" class="enemy-buffs">
+                                        <img class="enemy-buff" id="enemy1-buff1" src="" title="">
+                                        <img class="enemy-buff" id="enemy1-buff2" src="" title="">
+                                        <img class="enemy-buff" id="enemy1-buff3" src="" title="">
+                                        <img class="enemy-buff" id="enemy1-buff4" src="" title="">
+                                        <img class="enemy-buff" id="enemy1-buff5" src="" title="">
+                                </div>
+                        </div>
+                        <div class="enemy" id="enemy2-container">
+                                <div class="enemy-weakness" id="enemy2-weakness">
+                                        <img id="enemy2-weakness1" src="">
+                                        <img id="enemy2-weakness2" src="">
+                                        <img id="enemy2-weakness3" src="">
+                                        <div id="enemy2-debuffs" class="enemy-debuffs">
+                                                <img class="enemy-debuff" id="enemy2-debuff1" src="" title="">
+                                                <img class="enemy-debuff" id="enemy2-debuff2" src="" title="">
+                                                <img class="enemy-debuff" id="enemy2-debuff3" src="" title="">
+                                                <img class="enemy-debuff" id="enemy2-debuff4" src="" title="">
+                                                <img class="enemy-debuff" id="enemy2-debuff5" src="" title="">
+                                        </div>
+                                </div>
+                                <img id="enemy2" class="enemy-portrait" src="">
+                                <div class="enemy-stats" id="enemy2-stats"></div>
+                                <div id="enemy3-buffs" class="enemy-buffs">
+                                        <img class="enemy-buff" id="enemy2-buff1" src="" title="">
+                                        <img class="enemy-buff" id="enemy2-buff2" src="" title="">
+                                        <img class="enemy-buff" id="enemy2-buff3" src="" title="">
+                                        <img class="enemy-buff" id="enemy2-buff4" src="" title="">
+                                        <img class="enemy-buff" id="enemy2-buff5" src="" title="">
+                                </div>
+                        </div>
+                        <div class="enemy" id="enemy3-container">
+                                <div class="enemy-weakness" id="enemy3-weakness">
+                                        <img id="enemy3-weakness1" src="">
+                                        <img id="enemy3-weakness2" src="">
+                                        <img id="enemy3-weakness3" src="">
+                                        <div id="enemy3-debuffs" class="enemy-debuffs"><img class="enemy-debuff"
+                                                        id="enemy3-debuff1" src="" title="">
+                                                <img class="enemy-debuff" id="enemy3-debuff2" src="" title="">
+                                                <img class="enemy-debuff" id="enemy3-debuff3" src="" title="">
+                                                <img class="enemy-debuff" id="enemy3-debuff4" src="" title="">
+                                                <img class="enemy-debuff" id="enemy3-debuff5" src="" title="">
+                                        </div>
+
+                                </div>
+                                <img id="enemy3" class="enemy-portrait" src="">
+                                <div class="enemy-stats" id="enemy3-stats"></div>
+                                <div id="enemy3-buffs" class="enemy-buffs">
+                                        <img class="enemy-buff" id="enemy3-buff1" src="" title="">
+                                        <img class="enemy-buff" id="enemy3-buff2" src="" title="">
+                                        <img class="enemy-buff" id="enemy3-buff3" src="" title="">
+                                        <img class="enemy-buff" id="enemy3-buff4" src="" title="">
+                                        <img class="enemy-buff" id="enemy3-buff5" src="" title="">
+                                </div>
+                        </div>
+                        <div class="enemy" id="enemy4-container">
+                                <div class="enemy-weakness" id="enemy4-weakness">
+                                        <img id="enemy4-weakness1" src="">
+                                        <img id="enemy4-weakness2" src="">
+                                        <img id="enemy4-weakness3" src="">
+                                        <div id="enemy4-debuffs" class="enemy-debuffs">
+                                                <img class="enemy-debuff" id="enemy4-debuff1" src="" title="">
+                                                <img class="enemy-debuff" id="enemy4-debuff2" src="" title="">
+                                                <img class="enemy-debuff" id="enemy4-debuff3" src="" title="">
+                                                <img class="enemy-debuff" id="enemy4-debuff4" src="" title="">
+                                                <img class="enemy-debuff" id="enemy4-debuff5" src="" title="">
+                                        </div>
+
+                                </div>
+                                <img id="enemy4" class="enemy-portrait" src="">
+                                <div class="enemy-stats" id="enemy4-stats"></div>
+                                <div id="enemy4-buffs" class="enemy-buffs">
+                                        <img class="enemy-buff" id="enemy4-buff1" src="" title="">
+                                        <img class="enemy-buff" id="enemy4-buff2" src="" title="">
+                                        <img class="enemy-buff" id="enemy4-buff3" src="" title="">
+                                        <img class="enemy-buff" id="enemy4-buff4" src="" title="">
+                                        <img class="enemy-buff" id="enemy4-buff5" src="" title="">
+                                </div>
+
+                        </div>
+                        <div class="enemy" id="enemy5-container">
+                                <div class="enemy-weakness" id="enemy5-weakness">
+                                        <img id="enemy5-weakness1" src="">
+                                        <img id="enemy5-weakness2" src="">
+                                        <img id="enemy5-weakness3" src="">
+                                        <div id="enemy5-debuffs" class="enemy-debuffs">
+                                                <img class="enemy-debuff" id="enemy5-debuff1" src="" title="">
+                                                <img class="enemy-debuff" id="enemy5-debuff2" src="" title="">
+                                                <img class="enemy-debuff" id="enemy5-debuff3" src="" title="">
+                                                <img class="enemy-debuff" id="enemy5-debuff4" src="" title="">
+                                                <img class="enemy-debuff" id="enemy5-debuff5" src="" title="">
+                                        </div>
+                                </div>
+                                <img id="enemy5" class="enemy-portrait" src="">
+                                <div class="enemy-stats" id="enemy5-stats"></div>
+                                <div id="enemy5-buffs" class="enemy-buffs">
+                                        <img class="enemy-buff" id="enemy5-buff1" src="" title="">
+                                        <img class="enemy-buff" id="enemy5-buff2" src="" title="">
+                                        <img class="enemy-buff" id="enemy5-buff3" src="" title="">
+                                        <img class="enemy-buff" id="enemy5-buff4" src="" title="">
+                                        <img class="enemy-buff" id="enemy5-buff5" src="" title="">
+                                </div>
+                        </div>
+                </div>
+                <div id="centertext">
+                        <p id="infotext"></p>
+                        <p id="dmgtext"></p>
+                </div>
+                <div id="startMenu"> 
+                        <button id="start">Start</button>
+                        <input id="difficulty" placeholder="Enter difficulty level" type="number">
+                </div>
+                <div id="abilities">
+                        <div class="buttons">
+                                <button id="basicatkbutton" title="">Basic Attack</button>
+                                <button id="skillbutton" title="">Skill</button>
+                                <button id="ultimatebutton" title="">Ultimate</button>
+                        </div>
+                        <div class="sp" title="Skill Points">
+                                <p id="currentsp">3</p>
+                                <p id="spdivider">/</p>
+                                <p id="maxsp">5</p>
+                        </div>
+                </div>
+
+                <div id="turnOrder">
+
+                </div>
+
+                <div id="characters">
+                        <div class="character" id="char1-container">
+                                <img class="char-element" id="char1-element"></img>
+                                <img id="char1" class="characterimage" src="" title="">
+                                <div class="character-stats" id="char1-stats"></div>
+                                <div class="character-effects">
+                                        <div class="character-buffs" id="char1-buffs">
+                                                <img class="character-buff" id="char1-buff1" src="" title="">
+                                                <img class="character-buff" id="char1-buff2" src="" title="">
+                                                <img class="character-buff" id="char1-buff3" src="" title="">
+                                                <img class="character-buff" id="char1-buff4" src="" title="">
+                                                <img class="character-buff" id="char1-buff5" src="" title="">
+                                        </div>
+                                        <div class="character-debuffs" id="char1-debuffs">
+                                                <img class="character-debuff" id="char1-debuff1" src="" title="">
+                                                <img class="character-debuff" id="char1-debuff2" src="" title="">
+                                                <img class="character-debuff" id="char1-debuff3" src="" title="">
+                                                <img class="character-debuff" id="char1-debuff4" src="" title="">
+                                                <img class="character-debuff" id="char1-debuff5" src="" title="">
+                                        </div>
+                                </div>
+
+                        </div>
+                        <div class="character" id="char2-container">
+                                <img class="char-element" id="char2-element"></img>
+                                <img id="char2" class="characterimage" src="" title="">
+                                <div class="character-stats" id="char2-stats"></div>
+                                <div class="character-effects">
+                                        <div class="character-buffs" id="char2-buffs">
+                                                <img class="character-buff" id="char2-buff1" src="" title="">
+                                                <img class="character-buff" id="char2-buff2" src="" title="">
+                                                <img class="character-buff" id="char2-buff3" src="" title="">
+                                                <img class="character-buff" id="char2-buff4" src="" title="">
+                                                <img class="character-buff" id="char2-buff5" src="" title="">
+                                        </div>
+                                        <div class="character-debuffs" id="char2-debuffs">
+                                                <img class="character-debuff" id="char2-debuff1" src="" title="">
+                                                <img class="character-debuff" id="char2-debuff2" src="" title="">
+                                                <img class="character-debuff" id="char2-debuff3" src="" title="">
+                                                <img class="character-debuff" id="char2-debuff4" src="" title="">
+                                                <img class="character-debuff" id="char2-debuff5" src="" title="">
+                                        </div>
+                                </div>
+                        </div>
+                        <div class="character" id="char3-container">
+                                <img class="char-element" id="char3-element"></img>
+                                <img id="char3" class="characterimage" src="" title="">
+                                <div class="character-stats" id="char3-stats"></div>
+                                <div class="character-effects">
+                                        <div class="character-buffs" id="char3-buffs">
+                                                <img class="character-buff" id="char3-buff1" src="" title="">
+                                                <img class="character-buff" id="char3-buff2" src="" title="">
+                                                <img class="character-buff" id="char3-buff3" src="" title="">
+                                                <img class="character-buff" id="char3-buff4" src="" title="">
+                                                <img class="character-buff" id="char3-buff5" src="" title="">
+                                        </div>
+                                        <div class="character-debuffs" id="char3-debuffs">
+                                                <img class="character-debuff" id="char3-debuff1" src="" title="">
+                                                <img class="character-debuff" id="char3-debuff2" src="" title="">
+                                                <img class="character-debuff" id="char3-debuff3" src="" title="">
+                                                <img class="character-debuff" id="char3-debuff4" src="" title="">
+                                                <img class="character-debuff" id="char3-debuff5" src="" title="">
+                                        </div>
+                                </div>
+                        </div>
+                        <div class="character" id="char4-container">
+                                <img class="char-element" id="char4-element"></img>
+                                <img id="char4" class="characterimage" src="" title="">
+                                <div class="character-stats" id="char4-stats"></div>
+                                <div class="character-effects">
+                                        <div class="character-buffs" id="char4-buffs">
+                                                <img class="character-buff" id="char4-buff1" src="" title="">
+                                                <img class="character-buff" id="char4-buff2" src="" title="">
+                                                <img class="character-buff" id="char4-buff3" src="" title="">
+                                                <img class="character-buff" id="char4-buff4" src="" title="">
+                                                <img class="character-buff" id="char4-buff5" src="" title="">
+                                        </div>
+                                        <div class="character-debuffs" id="char4-debuffs">
+                                                <img class="character-debuff" id="char4-debuff1" src="" title="">
+                                                <img class="character-debuff" id="char4-debuff2" src="" title="">
+                                                <img class="character-debuff" id="char4-debuff3" src="" title="">
+                                                <img class="character-debuff" id="char4-debuff4" src="" title="">
+                                                <img class="character-debuff" id="char4-debuff5" src="" title="">
+                                        </div>
+                                </div>
+                        </div>
+                        <img id="ultimate-flash" src="" class="ultimate-flash hidden">
+
+                        <script src="index.js"></script>
+</body>
+
+</html>
