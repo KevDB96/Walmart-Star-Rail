@@ -462,7 +462,7 @@ class Baiheng extends Character {
         this.basic = {
             name: "Wave, Crash Against Stone",
             description: "Deal Ice damage to one designated enemy and grants Baiheng a speed boost for 1 turn.",
-            modifier: 0.75,
+            modifier: 0.45,
             sfx: new Audio("mixkit-water-splash-1311.wav"),
             execute: (targets) => {
                 const target = targets[0];
@@ -592,10 +592,8 @@ class MrReca extends Character {
                     document.getElementById("currentsp").innerText = sp;
                 }
                 document.getElementById("dmgtext").innerText = `${this.name} dealt ${dmg} damage to ${target.name}!`;
-                console.log(target.stats.speed);
                 applyDebuff(target, "Cut!", this);
                 target.stats.speed *= 0.9;
-                console.log(target.stats.speed);
                 showEffects();
                 addTotalDamage(dmg);
                 this.damageStack = 0;
@@ -609,13 +607,11 @@ class MrReca extends Character {
                 modifier: 0,
                 sfx: new Audio("Fast Forward Sound Effect.mp3"),
                 execute: async () => {
-                    console.log(turnOrder);
                     if (!allyTargetList[0]) {
                         showNotification("Target an ally first!");
                         return;
                     }
                     if (sp != 0) {
-                        console.log(turnOrder);
                         this.skill.sfx.play();
                         energyGain(this, 300);
                         document.getElementById("infotext").innerText = `${this.name} advanced ${allyTargetList[0].name}'s action!`
@@ -626,12 +622,15 @@ class MrReca extends Character {
                         document.getElementById("currentsp").innerText = sp;
                         applyBuff(currentTurn, "Run It Back!", this)
                         setTurnIndicator();
-                        let index = turnOrder.findIndex(turn => turn.name === currentTurn.name);
-                        if (index !== -1) {
-                            turnOrder.splice(index, 1);
-                            turnOrder.splice(turnOrderCheck, 0, currentTurn);
-                        }
-                        console.log(turnOrder);
+
+                        let targetIndex = turnOrder.findIndex(t => t === currentTurn);
+                        if (targetIndex !== -1) turnOrder.splice(targetIndex, 1);
+
+
+                        let casterIndex = turnOrder.findIndex(t => t === this);
+                        if (casterIndex !== -1) turnOrder.splice(casterIndex, 1);
+
+                        turnOrder.splice(turnOrderCheck, 0, currentTurn);
                     }
                     showEffects();
                     updateCharacterStats();
@@ -646,7 +645,6 @@ class MrReca extends Character {
             sfx: new Audio("VO_JA_Anaxa_Technique_01.ogg"),
             execute: () => {
                 if (this.resource >= this.resourcemax) {
-                    console.log(turnOrder.map(u => u.stats.speed))
                     this.ultimate.sfx.play();
                     flashUltimate(this);
                     characterList.forEach(character => {
@@ -658,7 +656,6 @@ class MrReca extends Character {
                         enemy.stats.speed *= 0.75;
                         applyDebuff(enemy, "Ready, Set, Action!", this)
                     });
-                    console.log(turnOrder.map(u => u.stats.speed))
                     this.resource = 5;
 
                 }
@@ -675,7 +672,7 @@ class MrReca extends Character {
                 document.addEventListener("turnStart", () => { this.damageStack += 0.1 * charLevel; })
                     ;
             }
-        }; 
+        };
         this.damageStack = 0;
         this.passive.effect()
 
@@ -716,7 +713,6 @@ class VoidRangerReaver extends Enemy {
         }
         if (this.isStunned == true) {
             document.getElementById("infotext").textContent = `${this.name} is stunned!`
-            console.log("Stunned! Turn skipped!")
             return;
         }
         if (this.isBroken == true) {
@@ -917,7 +913,6 @@ function procDoTs(unit) {
     unit.debuffs.forEach(debuff => {
         if (debuff.effectdmg) debuff.effectdmg(debuff.applier, unit);
         if (debuff.event) document.dispatchEvent(new CustomEvent(debuff.event))
-        console.log(debuff.effectdmg)
     })
     showNotification(DoTDamage);
     checkDeath();
@@ -986,7 +981,6 @@ function applyBreakDebuff(attacker, unit, element) {
 function applyBuff(unit, buff, applier) {
 
     const buffFind = buffList.find(b => b.id === buff);
-    if (!buffFind) console.log(`${buff} not found ${unit}`);
 
     const buffexists = unit.buffs.some(d => d.id === buffFind.id);
     if (buffexists) return;
@@ -1075,7 +1069,7 @@ function targetAllies() {
     allyImgs.forEach((img, index) => {
         img.addEventListener("click", () => {
             const ally = characterList[index];
-            if (!ally) return;
+            if (ally.currentHP == 0) return;
 
             const characterImages = document.querySelectorAll(".characterimage");
             characterImages.forEach(c => c.classList.remove('enemy-targeted'))
@@ -1202,7 +1196,7 @@ function setImages() {
         if (char && char.img) {
             charImage.src = char.img;
             charImage.style.display = "block";
-            if (char.currentHP == 0){
+            if (char.currentHP == 0) {
                 charImage.classList.add("downed");
             }
             if (charStats) charStats.style.display = "block";
@@ -1229,6 +1223,7 @@ async function start() {
     const enemyImgs = document.querySelectorAll(".enemy-portrait");
     enemyImgs.forEach(img => { img.classList.remove('enemy-targeted'); })
     difficultyLevel = Number(document.getElementById("difficulty").value);
+    document.getElementById("difficultyIndicatorText").textContent = "Difficulty Level: ";
     document.getElementById("difficultyIndicatorNumber").style.display = "inline-block";
     document.getElementById("difficultyIndicatorNumber").textContent = difficultyLevel;
     if (difficultyLevel <= 0 || difficultyLevel > 1000) {
@@ -1238,7 +1233,6 @@ async function start() {
     if (characterList.length == 0) {
         createParty(difficultyLevel);
     }
-    console.log(difficultyLevel);
     generateEnemies(5, difficultyLevel);
     setBackground();
     if (!isPlaying(bgm)) {
@@ -1780,6 +1774,12 @@ function healUnit(unit, amount) {
     if (unit.currentHP == 0) {
         turnOrder.push(unit);
     }
+
     unit.currentHP += amount;
+
+    characterList.forEach((c, i) => {
+        const currentCharImage = document.getElementById(`char${i + 1}`);
+        if (currentCharImage) currentCharImage.classList.remove("active-turn");
+    });
 }
 
