@@ -36,7 +36,13 @@ let enemyList = [];
 let targetList = [];
 let allyTargetList = [];
 let turnOrderCheck = 0;
-let selectableCharacters = [];
+let selectableCharacters = [
+    { name: "Trailblazer", img: "honkai-star-rail-trailblazer-destroyer-best-builds.avif", element: "Type_Physical.webp", description: "A primary damage dealer that scales off their own maximum health and gains more energy everytime an ally is healed" },
+    { name: "Constance", img: "Character_The_Dahlia_Splash_Art.webp", element: "fire.webp", description: "A Damage-Over-Time unit that can help accelerate those effects while also reducing the enemy's defenses. She gains more energy when more DoT effects occur." },
+    { name: "Baiheng", img: "Baiheng.png", element: "Type_Ice.png", description: "A healer that applies a Healing-Over-Time effect to allies and can equalize the health of all allies." },
+    { name: "Mr. Reca", img: "MrReca-removebg-preview.png", element: "Type_Quantum.webp", description: "A supportive unit that allows another unit to immediately take a turn and increase their damage. Can also speed up allies while slowing down enemies." }
+];
+let selectedCharacters = [];
 const debuffList = [
     { id: "FireBreak", name: "Burn", src: "Icon_Burn.webp", description: `Take Fire damage each turn`, duration: 2, baseChance: 1.5, effect: (attacker, unit) => { unit.currentHP -= 50 * Math.pow(attacker.level, 0.95) }, element: "Fire", applier: "", event: "DoT" },
     { id: "PhysicalBreak", name: "Bleed", src: "Icon_Bleed.webp", description: `Take Physical damage each turn based on max HP`, duration: 2, baseChance: 1.5, effect: (attacker, unit) => { unit.currentHP -= Math.min((unit.stats.hp * 0.1), 50 * Math.pow(attacker.level, 0.95)) }, element: "Physical", applier: "", event: "DoT" },
@@ -102,8 +108,58 @@ function onStartUp() {
     document.getElementById("skillbutton").disabled = true;
     document.getElementById("ultimatebutton").disabled = true;
     combatOngoing = true;
+const characterSelect = document.getElementById("characterSelect");
 
+selectableCharacters.forEach((char, index) => {
+    const charCard = document.createElement("div");
+    charCard.classList.add("char-card");
+    charCard.title = char.description;
+
+    charCard.innerHTML = `
+        <img class="char-img" src="${char.img}" data-index="${index}" alt="${char.name}" data-name="${char.name}">
+        <img class="char-element" src="${char.element}" alt="${char.element}">
+        <div class="char-name">${char.name}</div>
+    `;
+
+    characterSelect.appendChild(charCard);
+});
+
+document.querySelectorAll(".char-img").forEach(img => {
+    img.addEventListener("click", () => {
+        const charName = img.dataset.name;
+
+        if (selectedCharacters.includes(charName)) {
+            selectedCharacters = selectedCharacters.filter(name => name !== charName);
+            updateSelectionBadges();
+            return;
+        }
+
+       
+        if (selectedCharacters.length >= 4) return;
+
+        selectedCharacters.push(charName);
+        updateSelectionBadges();
+    });
+});
 }
+
+function updateSelectionBadges() {
+
+    document.querySelectorAll(".select-number").forEach(el => el.remove());
+
+    selectedCharacters.forEach((charName, order) => {
+        const img = document.querySelector(`.char-img[data-name="${charName}"]`);
+        if (!img) return;
+        const parent = img.parentElement;
+
+        const badge = document.createElement("div");
+        badge.classList.add("select-number");
+        badge.textContent = order + 1;
+
+        parent.appendChild(badge);
+    });
+}
+
 onStartUp();
 
 
@@ -142,6 +198,7 @@ class Unit {
         this.isBroken = false;
         this.turnCount = 0;
         this.isStunned = false;
+        this.shieldAmount = 0;
 
     }
     get isAlive() {
@@ -330,7 +387,7 @@ class Constance extends Character {
             speed: 96,
             hpgrowth: 12,
             atkgrowth: 7.5,
-            defgrowth: 6.5,
+            defgrowth: 6.5
         });
 
         this.basic = {
@@ -457,7 +514,7 @@ class Baiheng extends Character {
             speed: 101,
             hpgrowth: 15,
             atkgrowth: 5,
-            defgrowth: 7,
+            defgrowth: 7
         });
 
         this.basic = {
@@ -570,7 +627,7 @@ class MrReca extends Character {
             hpgrowth: 11,
             atkgrowth: 7,
             defgrowth: 8,
-            damageStack: 0,
+            damageStack: 0
         });
 
         this.basic = {
@@ -837,6 +894,13 @@ class VoidRangerDistorter extends Enemy {
         updateCharacterStats();
         updateEnemyStats();
     }
+}
+
+const characterClasses = {
+    "Trailblazer": DestructionMC,
+    "Constance": Constance,
+    "Baiheng": Baiheng,
+    "Mr. Reca": MrReca
 }
 
 let enemyDatabase = [VoidRangerReaver, VoidRangerDistorter];
@@ -1222,6 +1286,12 @@ function isPlaying(audio) {
 }
 
 async function start() {
+    if (selectedCharacters.length != 4) {
+        showNotification("Select a full team of 4 characters.");
+        return
+    }
+    const characterSelect = document.getElementById("characterSelect");
+    characterSelect.style.display = "none";
     combatOngoing = true;
     const enemyImgs = document.querySelectorAll(".enemy-portrait");
     enemyImgs.forEach(img => { img.classList.remove('enemy-targeted'); })
@@ -1270,15 +1340,17 @@ async function start() {
 };
 
 function createParty(level) {
-    char1 = new DestructionMC(level);
-    char2 = new Constance(level);
-    char3 = new Baiheng(level);
-    char4 = new MrReca(level);
-    characterList.push(char1);
-    characterList.push(char2);
-    characterList.push(char3);
-    characterList.push(char4);
+    const party = [];
+
+    selectedCharacters.forEach(name => {
+        const CharClass = characterClasses[name];
+        if (CharClass) {
+            party.push(new CharClass(level));
+        }
+    });
+    characterList = party;
 }
+
 
 pauseMusicButton.onclick = () => {
     if (bgm.paused) {
