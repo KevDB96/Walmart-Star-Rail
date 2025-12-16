@@ -25,13 +25,19 @@
                 </div>
                 <button id="changeMusic">Random Song</button>
         </div>
-        <div id="difficultyIndicator">
-                <p id="difficultyIndicatorText"></p>
-                <p id="difficultyIndicatorNumber"></p>
+        <div id="gameInfo">
+                <div id="difficultyIndicator">
+                        <p id="difficultyIndicatorText"></p>
+                        <p id="difficultyIndicatorNumber"></p>
+                </div>
+                <div id="victoryPoints">
+                        <p id="victoryPointsText">Consecutive victories:</p>
+                        <p id="victoryPointsNumber">0</p>
+                </div>
         </div>
 
         <div id="characterSelect">
-                
+
         </div>
 
         <p id="totaldamage"></p>
@@ -77,7 +83,7 @@
                                 </div>
                                 <img id="enemy2" class="enemy-portrait" src="">
                                 <div class="enemy-stats" id="enemy2-stats"></div>
-                                <div id="enemy3-buffs" class="enemy-buffs">
+                                <div id="enemy2-buffs" class="enemy-buffs">
                                         <img class="enemy-buff" id="enemy2-buff1" src="" title="">
                                         <img class="enemy-buff" id="enemy2-buff2" src="" title="">
                                         <img class="enemy-buff" id="enemy2-buff3" src="" title="">
@@ -162,7 +168,7 @@
                         <p id="infotext"></p>
                         <p id="dmgtext"></p>
                 </div>
-                <div id="startMenu"> 
+                <div id="startMenu">
                         <button id="start">Start</button>
                         <input id="difficulty" placeholder="Enter difficulty level" type="number">
                 </div>
@@ -172,7 +178,8 @@
                                 <button id="skillbutton" title="">Skill</button>
                                 <button id="ultimatebutton" title="">Ultimate</button>
                         </div>
-                        <div class="sp" title="Skill Points">
+                        <div class="sp"
+                                title="Skill Points are shared across the whole team. Using a Skill consumes SP. Using a Basic Attack generates SP. Ultimate abilities do not consume SP, normally.">
                                 <p id="currentsp">3</p>
                                 <p id="spdivider">/</p>
                                 <p id="maxsp">5</p>

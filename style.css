@@ -9,6 +9,17 @@
     height: 30px;
 }
 
+#gameInfo {
+    position: fixed;
+    top: 10px;
+    right: 10px;
+    display: flex;
+    flex-direction: row;
+    gap: 10px;
+    font-size: large;
+    z-index: 1000;
+}
+
 #difficultyIndicator {
     position: fixed;
     top: -20px;
@@ -17,6 +28,10 @@
     flex-direction: row;
     gap: 10px;
     font-size: xx-large;
+    display: "none";
+}
+
+#victoryPointsIndicator {
     display: "none";
 }
 
@@ -136,9 +151,11 @@ body {
 
 .char-element {
     position: absolute;
-    bottom: -10px;
-    right: 20px;
+    top: -27px;
     width: 32px;
+    height: 32px;
+    z-index: 99;
+    pointer-events: none;
 }
 
 .char-name {
@@ -277,6 +294,7 @@ body {
     display: inline-block;
     border-radius: 10px;
 }
+
 
 
 .character-stats {
