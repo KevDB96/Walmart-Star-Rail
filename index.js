@@ -44,11 +44,7 @@ let selectableCharacters = [
     { name: "Trailblazer", img: "honkai-star-rail-trailblazer-destroyer-best-builds.avif", element: "Type_Physical.webp", description: "A primary damage dealer that scales off their own current health and gains more energy everytime an ally is healed." },
     { name: "Constance", img: "Character_The_Dahlia_Splash_Art.webp", element: "fire.webp", description: "A Damage-Over-Time unit that can help accelerate those effects while also reducing the enemy's defenses. She gains more energy when more DoT effects occur." },
     { name: "Baiheng", img: "Baiheng.png", element: "Type_Ice.png", description: "A healer that applies a Healing-Over-Time effect to allies and can equalize the health of all allies." },
-    { name: "Mr. Reca", img: "MrReca-removebg-preview.png", element: "Type_Quantum.webp", description: "A supportive unit that allows another unit to immediately take a turn and increase their damage. Can also speed up allies while slowing down enemies." },
-    { name: "Screwllum", img: "so-again-how-is-screwllum-still-not-playable-v0-roxuglb2y40g1.webp", element: "Type_Imaginary-removebg-preview.png", description: "A primary damage dealer, apt at dealing with multiple enemies at once." },
-    { name: "Yanqing", img: "7188611a0125132f22376df9638d6675_602835355632644652-removebg-preview.png", element: "Type_Ice.png", description: "A primary damage dealer that consumes skill points fast to damage one enemy." },
-    { name: "Stephen", img: "NPC_Stephen_Lloyd-removebg-preview.png", element: "Type_Imaginary-removebg-preview.png", description: "A tanky support unit that can shield allies and increase their defenses." },
-    { name: "Tribios", img: "a800ca311eaac0c77272cb34ce7b40bd-removebg-preview.png", element: "Type_Wind.webp", description: "A team support that lets your entire team deal more damage. Her buffs only tick down on her own turns." },
+    { name: "Mr. Reca", img: "MrReca-removebg-preview.png", element: "Type_Quantum.webp", description: "A supportive unit that allows another unit to immediately take a turn and increase their damage. Can also speed up allies while slowing down enemies." }
 ];
 let selectedCharacters = [];
 const debuffList = [
@@ -64,11 +60,6 @@ const debuffList = [
     { id: "Nihility's Command", name: "Nihility's Command", src: "internet-keyword-targeting-seo-target-icon--22.png", description: `Targeted for a massive attack and taking 10% increased damage`, duration: 10, baseChance: 1, effect: (attacker, unit) => { unit.stats.defreduction -= 0.1 }, revert: (attacker, unit) => { unit.stats.defreduction += 0.1 }, applier: "", event: "" },
     { id: "Cut!", name: "Cut!", src: "145065.png", description: `Mr Reca has slowed this unit by 10%`, duration: 1, revert: (attacker, unit) => { unit.stats.speed /= 0.9 }, applier: "", event: "" },
     { id: "Ready, Set, Action!", name: "Ready, Set, Action!", src: "mrrecawhite-removebg-preview.png", description: `Mr Reca has slowed this unit down by 25%`, duration: 2, revert: (attacker, unit, applier) => { unit.stats.speed *= 1.25 }, applier: "", event: "" },
-    { id: "Wind Shear", name: "Wind Shear", src: "Icon_Wind_Shear.webp", description: `This unit is taking damage each turn and is targeted for a massive attack!`, duration: 3, effect: (attacker, unit) => { takeDamage(unit, Math.pow(attacker.level, 0.4)) }, applier: "", event: "" },
-    { id: "Enraged Sting", name: "Enraged", src: "symbol-anger-emoji-computer-icons-angry-emoji-thumbnail-removebg-preview.png", description: `This unit is preparing to kamikaze itself!`, duration: 2 },
-    { id: "Miasma", name: "Miasma", src: "istockphoto-1939875666-612x612-removebg-preview.png", description: `Take damage each turn and reduces defense by 20%`, duration: 3, effect: (attacker, unit) => { unit.stats.defreduction += 0.2 }, effectdmg: (attacker, unit) => { takeDamage(unit, Math.pow(attacker.level, 5)) }, revert: (attacker, unit) => { unit.stats.defreduction -= 0.2 }, applier: "" },
-    { id: "Sudden Impact", name: "Sudden Impact", src: "istockphoto-1148609375-612x612-removebg-preview.png", description: `this unit has had their defenses reduced by 20%`, duration: 3, effect: (attacker, unit) => { unit.stats.defreduction += 0.2 }, revert: (attacker, unit) => { unit.stats.defreduction -= 0.2 }, applier: "" },
-
 ]
     ;
 const buffList = [
@@ -76,13 +67,6 @@ const buffList = [
     { id: "Mending Waters", name: "Mending Waters", src: "Ability_Gourdful_of_Elixir.webp", sfx: "084373_heal-36672.mp3", description: `This unit will be healed at the start of their next turn`, duration: 3, effect: (attacker, unit, applier) => { unit.currentHP += Math.floor((0.08 * applier.stats.hp) + 50) }, applier: "", event: "healAlly" },
     { id: "Run It Back!", name: "Run It Back!", src: "pngtree-fast-forward-icon-image_1128381-removebg-preview.png", description: `Increases damage bonus by 75%`, duration: 3, effect: (attacker, unit, applier) => { unit.stats.damageBonus += 0.8 }, revert: (attacker, unit, applier) => { unit.stats.damageBonus -= 0.8 }, applier: "", event: "" },
     { id: "Ready, Set, Action!", name: "Ready, Set, Action!", src: "mrrecawhite-removebg-preview.png", description: `Mr Reca has sped this unit up by 33%`, duration: 2, revert: (attacker, unit, applier) => { unit.stats.speed /= 1.33 }, applier: "", event: "" },
-    { id: "Swift as the Wind", name: "Swift as the Wind", src: "png-transparent-wind-blow-air-fantasy-swirl-wind-icon.png", description: `Increases Yanqing's speed by 25%`, duration: 3, revert: (attacker, unit, applier) => { unit.stats.speed /= 1.25 }, applier: "", event: "" },
-    { id: "Destructive as Lightning", name: "Destructive as Lightning", src: "Ability_Stormborn-removebg-preview.png", description: `Yanqing is ignoring 25% of enemy defenses.`, duration: 1, revert: (attacker, unit, applier) => { unit.defignore /= 1.25 }, applier: "", event: "" },
-    { id: "Antiviral Buffer", name: "Antiviral Buffer", src: "1705438.png", description: `Stephen has increased his defense by 25%`, duration: 1, revert: (attacker, unit) => { unit.stats.def /= 1.25 }, applier: "", event: "" },
-    { id: "Shield.exe", name: "Shield.exe", src: "security-icon-antivirus-icon-protection-icon-web-security-icon-firewall-user-gratis-symbol-logo-png-clipart-removebg-preview.png", description: `This unit has increased their defense by 25%`, duration: 2, revert: (attacker, unit) => { unit.stats.def /= 1.25 }, applier: "", event: "" },
-    { id: "Gales of Tomorrow", name: "Gales of Tomorrow", src: "pngtree-gale-icon-image_1190083-removebg-preview.png", description: `This unit has increased their Attack and Speed by 20%`, duration: 3, effect: (attacker, unit) => { const buff = unit.buffs.find(b => b.id === "Gales of Tomorrow"); if (buff) buff.duration++; }, revert: (attacker, unit, applier) => { unit.stats.atk /= 1.25, unit.stats.speed /= 1.25 }, applier: "", event: "" },
-    { id: "Riding the West Wind", name: "Riding the West Wind", src: "Ability_If_You_re_Happy_and_You_Know_It-removebg-preview(1).png", description: `This unit has increased their damage dealt by 50%`, duration: 3, effect: (attacker, unit) => { const buff = unit.buffs.find(b => b.id === "Riding the West Wind"); if (buff) buff.duration++; }, revert: (attacker, unit, applier) => { unit.stats.damageBonus /= 1.5 }, applier: "", event: "" },
-    { id: "Click To Restart", name: "Click To Restart", src: "istockphoto-1405026405-612x612-removebg-preview.png", description: `Stephen is ready to revive the next ally that goes down`, duration: 99 },
 ];
 
 const bgmList = [
@@ -294,7 +278,7 @@ class DestructionMC extends Character {
         this.basic = {
             name: "Batter Up!",
             description: "Deal Physical damage to one designated enemy.",
-            modifier: 1,
+            modifier: 0.75,
             sfx: new Audio("Minecraft Fall Damage (Crack) - Sound Effect (HD).mp3"),
             execute: (targets) => {
                 const target = targets[0];
@@ -320,8 +304,8 @@ class DestructionMC extends Character {
             this.skill = {
                 name: "Home Run Hit",
                 description: "Deal Physical damage to one designated enemy and adjacent targets.",
-                modifier1: 2,
-                modifier2: 1.3,
+                modifier1: 1.3,
+                modifier2: 0.9,
                 sfx: new Audio("Minecraft Fall Damage (Crack) - Sound Effect (HD).mp3"),
                 execute: (targets) => {
                     if (sp != 0) {
@@ -358,8 +342,8 @@ class DestructionMC extends Character {
 
         this.ultimate = {
             name: "Ace Player",
-            description: "Deal Physical damage to all enemy targets.",
-            modifier: 3,
+            description: "Deal Physical damage all enemy targets.",
+            modifier: 2,
             sfx: new Audio("VO_JA_Stelle_Ultimate_-_Activate_Destruction_01.mp3"),
             execute: () => {
                 if (this.resource >= this.resourcemax) {
@@ -394,13 +378,7 @@ class DestructionMC extends Character {
                     energyGain(this, 5);
                     updateCharacterStats();
                 })
-
-                document.addEventListener("combatStart", () => {
-                    this.currentHP -= Math.floor(this.stats.hp * 0.5);
-                })
-            }
         }
-        this.passive.effect();
     }
 }
 
@@ -658,146 +636,6 @@ class Baiheng extends Character {
     }
 }
 
-class StephenLloyd extends Character {
-    constructor(level) {
-        super({
-            name: "Stephen Lloyd",
-            img: "NPC_Stephen_Lloyd-removebg-preview.png",
-            level: level,
-            affiliation: "Herta Space Station",
-            star: "5*",
-            path: "Preservation",
-            element: "Imaginary",
-            resource: 25,
-            resourcemax: 125,
-            basehp: 148,
-            baseatk: 49,
-            basedef: 97,
-            speed: 102,
-            hpgrowth: 16,
-            atkgrowth: 5,
-            defgrowth: 9,
-            reboot: false,
-        });
-
-        this.basic = {
-            name: "Antiviral Buffer",
-            description: "Deal Imaginary damage to one designated enemy and grants Stephen a defense boost for 2 turns.",
-            modifier: 0.6,
-            sfx: new Audio("mixkit-sci-fi-click-900.wav"),
-            execute: (targets) => {
-                const target = targets[0];
-                this.basic.sfx.play();
-                this.stats.def *= 1.25;
-                const dmg = dealDamageDef(this, target, this.basic.modifier);
-                takeDamage(target, dmg);
-                if (target.weaknesses.some(w => w.weakness === this.element)) {
-                    toughnessDamage(target, (15 * this.breakeffect))
-                }
-                energyGain(this, 15);
-                if (sp < spmax) {
-                    sp++;
-                    document.getElementById("currentsp").innerText = sp;
-                }
-                document.getElementById("dmgtext").innerText = `${this.name} dealt ${dmg} damage to ${target.name}!`;
-                applyBuff(this, "Antiviral Buffer", this);
-                showEffects();
-                addTotalDamage(dmg);
-                endBasic();
-            }
-        },
-
-            this.skill = {
-                name: "Shield.exe",
-                description: "Grants all allies a shield based on Stephen's defense and increases their defense for 2 turns.",
-                modifier: 0.7,
-                sfx: new Audio("mixkit-sci-fi-confirmation-914.wav"),
-                execute: () => {
-                    if (sp != 0) {
-                        this.skill.sfx.play();
-                        const shieldAmount = ((this.skill.modifier * this.stats.def)) + 105;
-                        characterList.forEach(character => {
-                            if (character.currentHP >= 0) {
-                                shieldUnit(character, shieldAmount);
-                                applyBuff(character, "Shield.exe", this)
-                            }
-                            document.getElementById("dmgtext").innerText = `${this.name} shielded all allies for ${Math.floor(shieldAmount)}!`;
-                        })
-                        addTotalDamage(Math.floor((this.skill.modifier * this.stats.hp) * characterList.length))
-                        energyGain(this, 30);
-                        characterList.filter(c => c.currentHP > 0).forEach(() => {
-                            document.dispatchEvent(new CustomEvent("shieldAlly"));
-                        });
-                        showEffects();
-                        updateCharacterStats();
-                        endSkill();
-
-                    }
-
-
-                }
-            }
-
-        this.ultimate = {
-            name: "Safeguard Manifest",
-            description: "Grants all allies a massive shield and gives Stephen one stack of 'Reboot', allowing him to revive a fallen character.",
-            modifier: 1,
-            sfx: new Audio("mixkit-sci-fi-plasma-gun-power-up-1679.wav"),
-            execute: () => {
-                if (this.resource >= this.resourcemax) {
-                    flashUltimate(this);
-                    this.reboot = true;
-                    applyBuff(this, "Click To Restart", this);
-                    const shieldAmount = ((this.ultimate.modifier * this.stats.def)) + 105;
-                    characterList.forEach(character => {
-                        if (character.currentHP >= 0) {
-                            shieldUnit(character, shieldAmount);
-                        }
-                        document.getElementById("dmgtext").innerText = `${this.name} shielded all allies for ${Math.floor(shieldAmount)}!`;
-                    })
-                    characterList.filter(c => c.currentHP > 0).forEach(() => {
-                        document.dispatchEvent(new CustomEvent("shieldAlly"));
-                    });
-                    showEffects();
-                    updateCharacterStats();
-                    this.resource = 5;
-
-                }
-                else {
-                    showNotification(notEnoughEnergy);
-                    ultimateButton.style.disabled = true;
-                }
-            },
-        };
-
-        this.passive = {
-            effect: () => {
-                if (this.reboot === true) {
-                    document.addEventListener("allyDowned", () => {
-
-                        const downedCharIndex = characterList.findIndex(c => c.currentHP <= 0);
-                        if (downedCharIndex === -1) return;
-
-                        const downedChar = characterList[downedCharIndex];
-
-                        downedChar.currentHP = Math.floor(0.3 * downedChar.stats.hp);
-
-                        showNotification(`${downedChar.name} has been revived by ${this.name}'s Reboot!`);
-                        new Audio("futuristic-gun-shot-sci-fi-217154.mp3").play();
-
-                        const charImg = document.getElementById(`char${downedCharIndex + 1}`);
-                        if (charImg) charImg.classList.remove("downed");
-                        this.reboot = false;
-                        updateCharacterStats();
-                    })
-                }
-
-            }
-        }
-        this.passive.effect();
-    }
-}
-
 class MrReca extends Character {
     constructor(level) {
         super({
@@ -939,440 +777,6 @@ class MrReca extends Character {
     }
 }
 
-class Screwllum extends Character {
-    constructor(level) {
-        super({
-            name: "Screwllum",
-            img: "so-again-how-is-screwllum-still-not-playable-v0-roxuglb2y40g1.webp",
-            level: level,
-            affiliation: "Herta Space Station",
-            star: "5*",
-            path: "Erudition",
-            element: "Imaginary",
-            resource: 25,
-            resourcemax: 150,
-            basehp: 164,
-            baseatk: 103,
-            basedef: 62,
-            speed: 101,
-            hpgrowth: 13,
-            atkgrowth: 9,
-            defgrowth: 6,
-        });
-
-        this.basic = {
-            name: "Cognizant Shock",
-            description: "Deal Imaginary damage to one designated enemy and adjactent targets.",
-            modifier: 1,
-            sfx: new Audio("elemental-magic-spell-impact-outgoing-228342.mp3"),
-            execute: (targets) => {
-                const target = targets[0];
-                const targetIndex = enemyList.indexOf(target);
-                this.basic.sfx.play();
-                const dmg = dealDamage(this, target, this.basic.modifier);
-                let targetLeft = enemyList[targetIndex - 1];
-                let targetRight = enemyList[targetIndex + 1];
-                takeDamage(target, dmg);
-                if (target.weaknesses.some(w => w.weakness === this.element)) {
-                    toughnessDamage(target, (25 * this.breakeffect))
-                }
-                if (targetLeft) {
-                    takeDamage(targetLeft, dmg);
-                    if (targetLeft.weaknesses.some(w => w.weakness === this.element)) {
-                        toughnessDamage(targetLeft, (15 * this.breakeffect))
-                    }
-                }
-                if (targetRight) {
-                    takeDamage(targetRight, dmg);
-                    if (targetRight.weaknesses.some(w => w.weakness === this.element)) {
-                        toughnessDamage(targetRight, (15 * this.breakeffect))
-
-                    }
-                }
-
-                energyGain(this, 10);
-                if (sp < spmax) {
-                    sp += 1;
-                    document.getElementById("currentsp").innerText = sp;
-                }
-                document.getElementById("dmgtext").innerText = `${this.name} dealt ${dmg} damage to ${target.name}`;
-                addTotalDamage(dmg);
-                if (targetLeft) addTotalDamage(dmg);
-                if (targetRight) addTotalDamage(dmg);
-                endBasic();
-            }
-        },
-
-            this.skill = {
-                name: "Planetary Devastation",
-                description: "Deal Imaginary damage to a random enemy target 9 times",
-                modifier: 0.8,
-                sfx: new Audio("simple-zaps-48107.mp3"),
-                execute: async (targets) => {
-                    if (sp != 0) {
-                        ;
-                        for (let i = 0; i < 9; i++) {
-                            let target = enemyList[Math.floor(Math.random() * enemyList.length)];
-                            const dmg = dealDamage(this, target, this.skill.modifier);
-                            takeDamage(target, dmg);
-                            if (target.weaknesses.some(w => w.weakness === this.element)) {
-                                toughnessDamage(target, (10 * this.breakeffect))
-                            }
-                            energyGain(this, 3);
-                            addTotalDamage(dmg);
-                            if ((i / 3) == 0) {
-                                const sfxClone = this.skill.sfx.cloneNode();
-                                sfxClone.play();
-                            }
-                            await sleep(200);
-                            document.getElementById("dmgtext").innerText = `${this.name} dealt ${total} damage to random enemies!`
-                        }
-
-                        endSkill();
-                    }
-                    else {
-                        notification.innerText = "Not enough skill points!"
-                    }
-                },
-            };
-
-        this.ultimate = {
-            name: "Galactic Annihilation",
-            description: "Deal Imaginary damage to all enemies 4 times.",
-            modifier: 2,
-            sfx: new Audio("VO_JA_Welt_Skill_01.ogg"),
-            execute: async () => {
-                if (this.resource >= this.resourcemax) {
-                    flashUltimate(this);
-
-                    for (let i = 0; i < 4; i++) {
-                        const dmgList = enemyList.map(enemy => dealDamage(this, enemy, this.ultimate.modifier));
-                        new Audio("Minecraft Fall Damage (Crack) - Sound Effect (HD).mp3").play();
-                        for (let j = 0; j < enemyList.length; j++) {
-                            const enemy = enemyList[j];
-                            const dmg = dmgList[j];
-
-                            takeDamage(enemy, dmg);
-                            addTotalDamage(dmg);
-
-                            if (enemy.weaknesses.some(w => w.weakness === this.element)) {
-                                toughnessDamage(enemy, (7 * this.breakeffect));
-                            }
-                        }
-
-                        updateEnemyStats(); 
-                        await sleep(500);
-                    }
-
-                    document.getElementById("dmgtext").innerText =
-                        `${this.name} dealt ${total} damage to all enemies!`;
-
-                    document.getElementById("ultimatebutton").disabled = true;
-                    checkDeath();
-                    this.resource = 5;
-                    updateCharacterStats();
-                } else {
-                    showNotification(notEnoughEnergy);
-                    ultimateButton.style.disabled = true;
-                }
-            },
-        };
-
-
-        this.passive = {
-            effect:
-                document.addEventListener("damageTaken", () => {
-                    if (characterList.includes(currentTurn)) {
-                        energyGain(this, 2);
-                        updateCharacterStats();
-                    }
-                })
-        }
-    }
-}
-
-class Yanqing extends Character {
-    constructor(level) {
-        super({
-            name: "Yanqing",
-            img: "7188611a0125132f22376df9638d6675_602835355632644652-removebg-preview.png",
-            level: level,
-            affiliation: "Xianzhou",
-            star: "5*",
-            path: "The Hunt",
-            element: "Ice",
-            resource: 25,
-            resourcemax: 140,
-            basehp: 164,
-            baseatk: 110,
-            basedef: 65,
-            speed: 104,
-            hpgrowth: 13,
-            atkgrowth: 10,
-            defgrowth: 7,
-            skillStacks: 0,
-        });
-
-        this.basic = {
-            name: "Swords, Heed Me",
-            description: "Deal Ice damage to one designated enemy. Recovers 2 Skill Points.",
-            modifier: 0.8,
-            sfx: new Audio("lknhemis25-stab-sfx-5(1).mp3"),
-            execute: (targets) => {
-                const target = targets[0];
-                this.basic.sfx.play();
-                const dmg = dealDamage(this, target, this.basic.modifier);
-                takeDamage(target, dmg);
-                if (target.weaknesses.some(w => w.weakness === this.element)) {
-                    toughnessDamage(target, (10 * this.breakeffect))
-                }
-                energyGain(this, 20);
-                spmax = 5;
-                if (sp < spmax) {
-                    sp = Math.min(sp + 2, spmax);
-                    document.getElementById("currentsp").innerText = sp;
-                }
-                document.getElementById("dmgtext").innerText = `${this.name} dealt ${dmg} damage to ${target.name}`;
-                addTotalDamage(dmg);
-                endBasic();
-            }
-        },
-
-            this.skill = {
-                name: "Masterful Swordsmanship",
-                description: "Consumes all Skill Points to deal increasing Ice damage to one enemy.",
-                modifier1: 0.75,
-                modifier2: 1,
-                modifier3: 1.5,
-                modifier4: 2.5,
-                sfx1: new Audio("ice-freezing-445024.mp3"),
-                sfx2: new Audio("tcqmcnh6yn-ice-impact-sfx-4.mp3"),
-                sfx3: new Audio("february-storm-63062.mp3"),
-                sfx4: new Audio("hit-windy-thud-399086.mp3"),
-                sfx5: new Audio("large-underwater-explosion-190270(2).mp3"),
-                execute: async (targets) => {
-                    showNotification("");
-                    if (sp != 0) {
-                        basicAtkButton.disabled = true;
-                        skillButton.disabled = true;
-                        const target = targets[0];
-                        let dmg = 0;
-
-                        if (this.skillStacks === 0 || this.skillStacks === 1) {
-                            dmg = dealDamage(this, target, this.skill.modifier1);
-                            energyGain(this, 10);
-                            this.skill.sfx1.play();
-                        } else if (this.skillStacks === 2 || this.skillStacks === 3) {
-                            dmg = dealDamage(this, target, this.skill.modifier2);
-                            energyGain(this, 10)
-                            this.skill.sfx2.play();
-                            if (this.skillStacks === 3) this.skill.sfx3.play();
-                        } else if (this.skillStacks === 4) {
-                            dmg = dealDamage(this, target, this.skill.modifier3);
-                            energyGain(this, 15);
-                            this.skill.sfx4.play();
-                        } else if (this.skillStacks >= 5) {
-                            dmg = dealDamage(this, target, this.skill.modifier4);
-                            energyGain(this, 20);
-                            this.skill.sfx5.play();
-                        }
-                        this.skillStacks += 1;
-                        takeDamage(target, dmg);
-
-                        if (target.weaknesses.some(w => w.weakness === this.element)) {
-                            if (this.skillStacks === 0 || this.skillStacks === 1) {
-                                toughnessDamage(target, (10 * this.breakeffect));
-                            } else if (this.skillStacks === 2 || this.skillStacks === 3) {
-                                toughnessDamage(target, (15 * this.breakeffect));
-                            } else if (this.skillStacks === 4) {
-                                toughnessDamage(target, (20 * this.breakeffect));
-                            } else if (this.skillStacks >= 5) {
-                                toughnessDamage(target, (25 * this.breakeffect));
-                            }
-                        }
-
-                        energyGain(this, 10);
-                        sp -= 1;
-                        if (sp == 0) {
-                            sp = 1,
-                                endSkill(),
-                                spmax = 5,
-                                this.skillStacks = 0;
-                            showNotification("Yanqing has run out of steam!");
-
-                        }
-
-                        document.getElementById("currentsp").innerText = sp;
-                        document.getElementById("dmgtext").innerText = `${this.name} dealt ${dmg} damage to ${target.name}`;
-                        addTotalDamage(dmg);
-                        updateCharacterStats();
-                        updateEnemyStats();
-                        await sleep(500);
-                        skillButton.disabled = false;
-                        if (sp == 0) skillButton.disabled = true;
-
-                    }
-
-                },
-            },
-            this.ultimate = {
-                name: "Prodigal Youth",
-                description: "Increase Skill Point maximum by, and recover 3 Skill Points, and increases Yanqing's speed by 25% for 3 turns. Also allows him to ignore 25% of enemy defenses for 1 turn.",
-                modifier: 0.5,
-                sfx: new Audio("VO_JA_Jing_Yuan_Ultimate_-_Unleash_01.ogg"),
-                execute: async () => {
-                    if (this.resource >= this.resourcemax) {
-                        flashUltimate(this);
-                        spmax = 8;
-                        this.speed *= 1.25;
-                        this.defignore *= 1.25;
-                        applyBuff(this, "Swift as the Wind", this);
-                        applyBuff(this, "Destructive as Lightning", this);
-                        sp = Math.min(sp + 3, spmax);
-                        this.resource = 5;
-                        document.getElementById("currentsp").innerText = sp;
-                        document.getElementsById("maxsp").innerText = spmax;
-                        updateCharacterStats();
-                        showEffects();
-                        this.resource = 5;
-                    } else {
-                        showNotification(notEnoughEnergy);
-                        ultimateButton.style.disabled = true;
-                    }
-                },
-            };
-
-
-        this.passive = {
-            effect:
-                document.addEventListener("basicAttackUsed", () => {
-                    energyGain(this, 10);
-                    updateCharacterStats();
-                })
-        }
-    }
-}
-
-class Tribios extends Character {
-    constructor(level) {
-        super({
-            name: "Tribios",
-            img: "a800ca311eaac0c77272cb34ce7b40bd-removebg-preview.png",
-            level: level,
-            affiliation: "Amphoreus",
-            star: "5*",
-            path: "Harmony",
-            element: "Wind",
-            resource: 25,
-            resourcemax: 120,
-            basehp: 144,
-            baseatk: 92,
-            basedef: 68,
-            speed: 105,
-            hpgrowth: 14,
-            atkgrowth: 6,
-            defgrowth: 6.5,
-        });
-
-        this.basic = {
-            name: "Gust of Time",
-            description: "Deal Wind damage to one designated enemy.",
-            modifier: 0.9,
-            sfx: new Audio("mixkit-quick-air-woosh-2605.wav"),
-            execute: (targets) => {
-                const target = targets[0];
-                this.basic.sfx.play();
-                const dmg = dealDamage(this, target, this.basic.modifier);
-                takeDamage(target, dmg);
-                if (target.weaknesses.some(w => w.weakness === this.element)) {
-                    toughnessDamage(target, (10 * this.breakeffect))
-                }
-                energyGain(this, 20);
-                if (sp < spmax) {
-                    sp += 1;
-                    document.getElementById("currentsp").innerText = sp;
-                }
-                addTotalDamage(dmg);
-                endBasic();
-                document.dispatchEvent(new CustomEvent("tribiosBasic"));
-            }
-        },
-
-            this.skill = {
-                name: "Gales of Tomorrow",
-                description: "Increases all allies' Attack and Speed for 3 turns",
-                sfx: new Audio("wind-gust-386158.mp3"),
-                execute: (targets) => {
-                    if (sp != 0) {
-                        this.skill.sfx.play();
-                        characterList.forEach(character => {
-                            if (character.buffs.some(b => b.id !== "Gales of Tomorrow")) {
-                                character.stats.atk *= 1.25;
-                                character.stats.speed *= 1.25;
-                            }
-                            applyBuff(character, "Gales of Tomorrow", this)
-                        })
-                        showEffects();
-                        energyGain(this, 30);
-                        endSkill();
-                    }
-                    else {
-                        notification.innerText = "Not enough skill points!"
-                    }
-                },
-            };
-
-        this.ultimate = {
-            name: "The West Wind",
-            description: "Increases all allies' damage dealt by 50%.",
-            modifier: 2,
-            sfx: new Audio("VO_JA_Robin_Skill_01.ogg"),
-            execute: () => {
-                if (this.resource >= this.resourcemax) {
-                    flashUltimate(this);
-                    characterList.forEach(character => {
-                        character.damageBonus *= 1.5;
-                        applyBuff(character, "Riding the West Wind", this)
-                    })
-                    this.resource = 5;
-                }
-                else {
-                    showNotification(notEnoughEnergy);
-                    ultimateButton.style.disabled = true;
-                }
-            },
-        };
-
-        this.passive = {
-            effect: () => {
-                document.addEventListener("tribiosBasic", () => {
-                    characterList.forEach(character => {
-                        character.stats.atk *= 1.05;
-                    });
-                });
-            }
-        };
-        this.passive2 = {
-            effect: () => {
-                document.addEventListener("turnStart", () => {
-                    if (currentTurn === this) {
-                        characterList.forEach(c => {
-                            const buff = c.buffs.find(b => b.id === "Gales of Tomorrow");
-                            if (buff) buff.duration--;
-                            const buff2 = c.buffs.find(b => b.id === "Riding the West Wind");
-                            if (buff2) buff2.duration--;
-                        });
-                        showEffects();
-                    }
-                });
-            }
-        };
-        this.passive.effect();
-        this.passive2.effect();
-
-    }
-}
-
 class VoidRangerReaver extends Enemy {
     constructor(level) {
         super({
@@ -1390,8 +794,8 @@ class VoidRangerReaver extends Enemy {
             atk: 12,
             def: 210,
             speed: 100,
-            toughness: 30,
-            hpgrowth: 140,
+            toughness: 20,
+            hpgrowth: 200,
             atkgrowth: 4,
             defgrowth: 4
         });
@@ -1473,8 +877,8 @@ class VoidRangerDistorter extends Enemy {
             atk: 15,
             def: 210,
             speed: 120,
-            toughness: 25,
-            hpgrowth: 110,
+            toughness: 20,
+            hpgrowth: 150,
             atkgrowth: 4,
             defgrowth: 3
         });
@@ -1526,368 +930,6 @@ class VoidRangerDistorter extends Enemy {
             await sleep(1000);
 
         }
-        checkDeath();
-        updateCharacterStats();
-        updateEnemyStats();
-    }
-}
-
-class VoidRangerTrampler extends Enemy {
-    constructor(level) {
-        super({
-            name: "Voidranger: Trampler",
-            img: "Enemy_Voidranger_Trampler-removebg-preview.png",
-            level: level,
-            affiliation: "Antimatter Legion",
-            rank: "Elite",
-            weaknesses: {
-                weakness1: "Quantum",
-                weakness2: "Ice",
-                weakness3: "Imaginary",
-            },
-            hp: 220,
-            atk: 18,
-            def: 280,
-            speed: 100,
-            toughness: 80,
-            hpgrowth: 180,
-            atkgrowth: 5,
-            defgrowth: 6,
-            turnCount: 0,
-        });
-    }
-
-    async onTurn() {
-        await sleep(1000);
-        resolveBuffsandDebuffs(this);
-        if (this.currentHP <= 0) {
-            checkDeath();
-            updateCharacterStats();
-            updateEnemyStats()
-            return;
-        }
-        if (this.isStunned == true) {
-            document.getElementById("infotext").textContent = `${this.name} is stunned!`
-            return;
-        }
-        if (this.isBroken == true) {
-            brokenEnemy(this);
-        }
-        await sleep(750);
-
-        if (this.turnCount === 1) {
-            // Windseeker Volley
-            this.turnCount = 0;
-            let unaffected = 0;
-            document.getElementById("dmgtext").innerText = ``;
-            document.getElementById("infotext").textContent = `${this.name} uses Windseeker Volley!`;
-            new Audio("many-arrows-flying-by-306037.mp3").play();
-            await sleep(2000);
-
-            characterList.forEach(c => {
-                if (c.debuffs.some(d => d.id === "Wind Shear")) {
-                    let dmg = dealDamageEnemy(this, c, 2.25);
-                    takeDamage(c, dmg);
-                    energyGain(c, 20);
-                    document.getElementById("dmgtext").innerText += `${this.name} dealt ${dmg} damage to ${c.name}!\n`;
-                    cleanseDebuffs(c, "Wind Shear");
-                } else {
-                    unaffected++;
-                }
-            });
-
-            if (unaffected === characterList.length) {
-                document.getElementById("dmgtext").innerText = `${this.name}'s Windseeker Volley missed all targets!`;
-            }
-            await sleep(1000);
-
-        } else {
-
-            const anyWindShear = characterList.some(c => c.debuffs.some(d => d.id === "Wind Shear"));
-
-            if (anyWindShear) {
-                document.getElementById("infotext").textContent = `${this.name} is preparing to hit all allies afflicted by Wind Shear!`;
-                this.turnCount = 1;
-                new Audio("magic-strike-5856.mp3").play();
-                await sleep(1000);
-            } else {
-                // Trample
-                new Audio("big-robot-footstep-015-445103.mp3").play();
-                let { actualTarget, index } = enemyRandomTarget();
-                let targetLeft = characterList[index - 1];
-                let targetRight = characterList[index + 1];
-
-                document.getElementById("dmgtext").innerText = ``;
-                document.getElementById("infotext").textContent = `${this.name} uses Trample, centered on ${actualTarget.name}!`;
-                await sleep(1000);
-
-                let dmg = Number(Math.round(dealDamageEnemy(this, actualTarget, 1.1)));
-
-                takeDamage(actualTarget, dmg);
-                energyGain(actualTarget, 10);
-                applyDebuff(actualTarget, "Wind Shear", this);
-
-                if (targetLeft) {
-                    takeDamage(targetLeft, dmg * 0.6);
-                    energyGain(targetLeft, 5);
-                    applyDebuff(targetLeft, "Wind Shear", this);
-                }
-                if (targetRight) {
-                    takeDamage(targetRight, dmg * 0.6);
-                    energyGain(targetRight, 5);
-                    applyDebuff(targetRight, "Wind Shear", this);
-                }
-
-                document.getElementById("dmgtext").innerText = `${this.name} dealt ${Math.round(dmg * 2.2)} total damage to multiple enemies!`;
-            }
-        }
-        await sleep(2000);
-        checkDeath();
-        updateCharacterStats();
-        updateEnemyStats();
-    }
-}
-
-class LesserSting extends Enemy {
-    constructor(level) {
-        super({
-            name: "Lesser Sting",
-            img: "Enemy_Lesser_Sting-removebg-preview.png",
-            level: level,
-            affiliation: "The Swarm",
-            rank: "Normal",
-            weaknesses: {
-                weakness1: "Wind",
-                weakness2: "Fire",
-                weakness3: "Quantum",
-            },
-            hp: 68,
-            atk: 12,
-            def: 200,
-            speed: 97,
-            toughness: 20,
-            hpgrowth: 100,
-            atkgrowth: 4,
-            defgrowth: 5,
-        });
-    }
-
-    async onTurn() {
-        await sleep(1000);
-        resolveBuffsandDebuffs(this);
-        if (this.currentHP <= 0) {
-            checkDeath();
-            updateCharacterStats();
-            updateEnemyStats()
-            return;
-        }
-        if (this.isStunned == true) {
-            document.getElementById("infotext").textContent = `${this.name} is stunned!`
-            return;
-        }
-        if (this.isBroken == true) {
-            brokenEnemy(this);
-        }
-        await sleep(750);
-        // Shear Attack
-        new Audio("flutter-from-whoosh-84523.mp3").play();
-        let { actualTarget } = enemyRandomTarget();
-        const dmg = dealDamageEnemy(this, actualTarget, 1);
-        takeDamage(actualTarget, dmg);
-        energyGain(actualTarget, 10);
-        document.getElementById("infotext").textContent = `${this.name} attacks ${actualTarget.name} for ${dmg} damage!`;
-        applyDebuff(actualTarget, "Wind Shear", this);
-        checkDeath();
-        updateCharacterStats();
-        updateEnemyStats();
-        await sleep(500);
-    }
-    async onDeath() {
-        if (this.speed != 0) {
-            this.speed = 0;
-            console.log(`${this.name} explodes on death.`);
-            new Audio("071758_skittering-bugsmp3-39918.mp3").play();
-            await sleep(1200);
-            new Audio("oddworld_bomb-94173.mp3").play();
-            await sleep(1000);
-            document.getElementById("infotext").textContent = `${this.name} explodes!`;
-            if (this.currentHP <= 0) {
-                characterList.forEach(c => {
-                    takeDamage(c, this.level * 3 + 10);
-                    energyGain(c, 5);
-                    applyDebuff(c, "Sudden Impact", this);
-                });
-            }
-        }
-    }
-}
-
-class RenegadeSting extends Enemy {
-    constructor(level) {
-        super({
-            name: "Renegade Sting",
-            img: "Enemy_Gnaw_Sting-removebg-preview.png",
-            level: level,
-            affiliation: "The Swarm",
-            rank: "Normal",
-            weaknesses: {
-                weakness1: "Fire",
-                weakness2: "Physical",
-                weakness3: "Imaginary",
-            },
-            hp: 50,
-            atk: 12,
-            def: 200,
-            speed: 101,
-            toughness: 40,
-            hpgrowth: 130,
-            atkgrowth: 4,
-            defgrowth: 6,
-            turnCount: 0,
-        });
-    }
-
-    async onTurn() {
-        await sleep(1000);
-        resolveBuffsandDebuffs(this);
-        if (this.currentHP <= 0) {
-            checkDeath();
-            updateCharacterStats();
-            updateEnemyStats()
-            return;
-        }
-        if (this.isStunned == true) {
-            document.getElementById("infotext").textContent = `${this.name} is stunned!`
-            return;
-        }
-        if (this.isBroken == true) {
-            brokenEnemy(this);
-            return;
-        }
-        await sleep(750);
-        if (this.turnCount === 0) {
-            document.getElementById("infotext").textContent =
-                `${this.name} becomes Enraged!`;
-
-            applyDebuff(this, "Enraged Sting", this);
-            await sleep(1000);
-
-            this.turnCount++;
-        }
-
-        else if (this.turnCount === 1) {
-            new Audio("explosion-312361.mp3").play();
-            let { actualTarget } = enemyRandomTarget();
-            const dmg = dealDamageEnemy(this, actualTarget, 4);
-
-            document.getElementById("infotext").textContent =
-                `${this.name} kamikaze'd onto ${actualTarget.name}!`;
-
-            await sleep(1000);
-
-            takeDamage(actualTarget, dmg);
-            energyGain(actualTarget, 20);
-
-            this.currentHP = 0;
-            console.log(`${this.name} has kamikazed.`);
-        }
-        checkDeath();
-        updateCharacterStats();
-        updateEnemyStats();
-    }
-}
-
-class SwarmKing extends Enemy {
-    constructor(level) {
-        super({
-            name: "Swarm King",
-            img: "Scarakabaz.png",
-            level: level,
-            affiliation: "The Swarm",
-            rank: "Boss",
-            weaknesses: {
-                weakness1: "Ice",
-                weakness2: "Physical",
-                weakness3: "Imaginary",
-            },
-            hp: 408,
-            atk: 19,
-            def: 275,
-            speed: 100,
-            toughness: 120,
-            hpgrowth: 300,
-            atkgrowth: 7,
-            defgrowth: 5,
-            turnCount: 0,
-            cooldown: 0,
-        });
-    }
-
-    async onTurn() {
-        await sleep(1000);
-        resolveBuffsandDebuffs(this);
-        if (this.currentHP <= 0) {
-            checkDeath();
-            updateCharacterStats();
-            updateEnemyStats()
-            return;
-        }
-        if (this.isStunned == true) {
-            document.getElementById("infotext").textContent = `${this.name} is stunned!`
-            return;
-        }
-        if (this.isBroken == true) {
-            brokenEnemy(this);
-        }
-        await sleep(750);
-        // Spawn Minions
-        if (this.cooldown == 0) {
-            new Audio("mixkit-futuristic-sci-fi-insect-plague-sounds-322.wav").play();
-            await (spawnMinions(this.level, 4, [RenegadeSting, LesserSting]));
-            await sleep(800);
-            this.cooldown = 2;
-        }
-        else {
-            this.cooldown--;
-        }
-        // Actual Attack
-        const randomAttack = Math.floor(Math.random() * 2);
-        if (this.turnCount++ < 6) {
-            if (randomAttack == 0) {
-                new Audio("whack04-105536.mp3").play();
-                let { actualTarget } = enemyRandomTarget();
-                const dmg = dealDamageEnemy(this, actualTarget, 1);
-                takeDamage(actualTarget, dmg);
-                energyGain(actualTarget, 15);
-                document.getElementById("infotext").textContent = `${this.name} attacks ${actualTarget.name} for ${dmg} damage!`;
-                await sleep(1000);
-                this.turnCount++;
-            } else {
-                new Audio("short-gas-leak-98286.mp3").play();
-                document.getElementById("infotext").textContent = `${this.name} uses Miasma!`;
-                characterList.forEach(c => {
-                    const dmg = dealDamageEnemy(this, c, 0.8);
-                    takeDamage(c, dmg);
-                    energyGain(c, 10);
-                    applyDebuff(c, "Miasma", this);
-                });
-                this.turnCount++;
-            }
-        } else {
-            new Audio("sci-fi-charge-up-37395.mp3").play();
-            document.getElementById("infotext").textContent = `${this.name} uses Swarm Disaster!`;
-            await sleep(2000);
-            new Audio("underwater-explosion-386175.mp3").play();
-            characterList.forEach(c => {
-
-                const dmg = dealDamageEnemy(this, c, 2);
-                takeDamage(c, dmg);
-                energyGain(c, 20);
-
-            })
-            this.turnCount = 0;
-        };
-
         checkDeath();
         updateCharacterStats();
         updateEnemyStats();
@@ -2363,7 +1405,7 @@ async function start() {
         createParty(difficultyLevel);
     }
     enemyList.length = 0;
-    generateEnemies(difficultyLevel, enemyDatabase);
+    generateEnemies(5, difficultyLevel);
     setBackground();
     characterList.forEach((char, index) => {
         char.domId = `char${index + 1}`;
@@ -2396,23 +1438,9 @@ async function start() {
     updateCharacterStats();
     document.dispatchEvent(new CustomEvent("combatStart"));
     await sleep(1000);
-    if (startButton.textContent == "Start") {
-        window.alert("Welcome to Walmart Star Rail! Select your party, match character elements to enemy weaknesses to break their Toughness bar, spend Skill Points with Skills and build them with Basic Attacks to accrue energy to unleash devastating Ultimate attacks! For more information, you can always hover over things you don't fully understand!")
-    } else if (startButton.textContent == "RETRY?") {
-        characterList.length = 0;
-        createParty(difficultyLevel);
-        enemyList.forEach(e => {
-            e.currentHP = e.totalHP
-        })
-    } else if (startButton.textContent == "NEXT CHALLENGE") {
-        difficultyLevel++;
-        document.getElementById("difficultyIndicatorNumber").textContent = difficultyLevel;
-        characterList.length = 0;
-        createParty(difficultyLevel);
-        enemyList.length = 0;
-        generateEnemies(difficultyLevel, enemyDatabase);
+    window.alert("Welcome to Walmart Star Rail! Select your party, match character elements to enemy weaknesses to break their Toughness bar, spend Skill Points with Skills and build them with Basic Attacks to accrue energy to unleash devastating Ultimate attacks! For more information, you can always hover over things you don't fully understand!")
 
-    }
+
 };
 
 function createParty(level) {
