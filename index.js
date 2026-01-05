@@ -35,6 +35,7 @@ document.getElementById("currentsp").innerText = sp;
 let spmax = 5;
 document.getElementById("maxsp").innerText = spmax;
 let turnOrder = [];
+let priorityQueue = [];
 let characterList = [];
 let enemyList = [];
 let targetList = [];
@@ -1678,7 +1679,18 @@ class LesserSting extends Enemy {
         if (this.currentHP <= 0) {
             checkDeath();
             updateCharacterStats();
-            updateEnemyStats()
+            updateEnemyStats();
+             console.log(`${this.name} explodes on death.`);
+            new Audio("071758_skittering-bugsmp3-39918.mp3").play();
+            await sleep(1200);
+            new Audio("oddworld_bomb-94173.mp3").play();
+            await sleep(1000);
+            document.getElementById("infotext").textContent = `${this.name} explodes!`;
+                characterList.forEach(c => {
+                    takeDamage(c, this.level * 3 + 10);
+                    energyGain(c, 5);
+                    applyDebuff(c, "Sudden Impact", this);
+                });
             return;
         }
         if (this.isStunned == true) {
@@ -1701,23 +1713,11 @@ class LesserSting extends Enemy {
         updateCharacterStats();
         updateEnemyStats();
         await sleep(500);
-    }
+}
     async onDeath() {
         if (this.speed != 0) {
             this.speed = 0;
-            console.log(`${this.name} explodes on death.`);
-            new Audio("071758_skittering-bugsmp3-39918.mp3").play();
-            await sleep(1200);
-            new Audio("oddworld_bomb-94173.mp3").play();
-            await sleep(1000);
-            document.getElementById("infotext").textContent = `${this.name} explodes!`;
-            if (this.currentHP <= 0) {
-                characterList.forEach(c => {
-                    takeDamage(c, this.level * 3 + 10);
-                    energyGain(c, 5);
-                    applyDebuff(c, "Sudden Impact", this);
-                });
-            }
+            priorityQueue.push(this);
         }
     }
 }
@@ -2677,8 +2677,13 @@ async function checkTurnOrder() {
         initializeTurnOrder(characterList, enemyList);
     }
     const currentUnit = turnOrder[turnOrderCheck];
+
+    if(priorityQueue.length == 0){
     currentTurn = currentUnit;
     if (!currentUnit) return;
+    } else { 
+        currentTurn = priorityQueue.shift();
+    }
 
     characterList.forEach((char, i) => {
         const charImage = document.getElementById(`char${i + 1}`);
