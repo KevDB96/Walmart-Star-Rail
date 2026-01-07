@@ -5,13 +5,13 @@ const startButton = document.getElementById("start");
 const basicAtkButton = document.getElementById("basicatkbutton");
 const skillButton = document.getElementById("skillbutton");
 const ultimateButton = document.getElementById("ultimatebutton");
-const skillpointscurrentdisplay = document.getElementById("currentsp");
 const spdivider = document.getElementById("spdivider");
-const skillpointmaxdisplay = document.getElementById("maxsp");
 const pauseMusicButton = document.getElementById("pauseMusic");
 const pureFictionButton = document.getElementById("pureFictionButton");
 const apocalypticShadowsButton = document.getElementById("apocalypticShadowsButton");
 const memoryOfChaosButton = document.getElementById("memoryofChaosButton");
+const victoryPointsDisplay = document.getElementById("victoryPointsNumber");
+const victoryPointsText = document.getElementById("victoryPointsText");
 const notEnoughEnergy = "Not Enough Energy!"
 const notEnoughSP = "Not Enough Skill Points!"
 const DoTDamage = "DoT damage:"
@@ -37,9 +37,11 @@ const backgroundList = [
 ]
 const backgroundImage = document.getElementById("background");
 let sp = 3;
-document.getElementById("currentsp").innerText = sp;
+const currentsp = document.getElementById("currentsp");
+currentsp.innerText = sp;
 let spmax = 5;
-document.getElementById("maxsp").innerText = spmax;
+const maxsp = document.getElementById("maxsp");
+maxsp.innerText = spmax;
 let turnOrder = [];
 let characterList = [];
 let enemyList = [];
@@ -122,13 +124,13 @@ function onStartUp() {
         if (container) container.style.display = "none";
     }
     document.getElementById("victoryPoints").style.display = "none";
-    document.getElementById("victoryPoints").innerText = `Victory Points: ${victoryPoints}`;
+    document.getElementById("victoryPoints").innerText = `Victory Points`;
     basicAtkButton.style.display = "none";
     skillButton.style.display = "none";
     ultimateButton.style.display = "none";
-    skillpointscurrentdisplay.style.display = "none";
+    currentsp.style.display = "none";
     spdivider.style.display = "none";
-    skillpointmaxdisplay.style.display = "none";
+    maxsp.style.display = "none";
     startButton.disabled = true;
     document.getElementById("basicatkbutton").disabled = true;
     document.getElementById("skillbutton").disabled = true;
@@ -314,7 +316,7 @@ class DestructionMC extends Character {
                 energyGain(this, 10);
                 if (sp < spmax) {
                     sp += 1;
-                    document.getElementById("currentsp").innerText = sp;
+                    currentsp.innerText = sp;
                 }
                 document.getElementById("dmgtext").innerText = `${this.name} dealt ${Math.round(dmg)} damage to ${target.name}`;
                 addTotalDamage(dmg);
@@ -448,7 +450,7 @@ class Constance extends Character {
                 energyGain(this, 10);
                 if (sp < spmax) {
                     sp += 1;
-                    document.getElementById("currentsp").innerText = sp;
+                    currentsp.innerText = sp;
                 }
                 document.getElementById("dmgtext").innerText = `${this.name} dealt ${dmg} damage to ${target.name}`;
                 addTotalDamage(dmg);
@@ -578,7 +580,7 @@ class Baiheng extends Character {
                 energyGain(this, 15);
                 if (sp < spmax) {
                     sp++;
-                    document.getElementById("currentsp").innerText = sp;
+                    currentsp.innerText = sp;
                 }
                 document.getElementById("dmgtext").innerText = `${this.name} dealt ${dmg} damage to ${target.name}!`;
                 applyBuff(this, "Rushing Waters", this);
@@ -704,7 +706,7 @@ class StephenLloyd extends Character {
                 energyGain(this, 15);
                 if (sp < spmax) {
                     sp++;
-                    document.getElementById("currentsp").innerText = sp;
+                    currentsp.innerText = sp;
                 }
                 document.getElementById("dmgtext").innerText = `${this.name} dealt ${dmg} damage to ${target.name}!`;
                 applyBuff(this, "Antiviral Buffer", this);
@@ -841,7 +843,7 @@ class MrReca extends Character {
                 energyGain(this, 10);
                 if (sp < spmax) {
                     sp++;
-                    document.getElementById("currentsp").innerText = sp;
+                    currentsp.innerText = sp;
                 }
                 document.getElementById("dmgtext").innerText = `${this.name} dealt ${dmg} damage to ${target.name}!`;
                 applyDebuff(target, "Cut!", this);
@@ -968,7 +970,7 @@ class Screwllum extends Character {
                 energyGain(this, 10);
                 if (sp < spmax) {
                     sp += 1;
-                    document.getElementById("currentsp").innerText = sp;
+                    currentsp.innerText = sp;
                 }
                 document.getElementById("dmgtext").innerText = `${this.name} dealt ${dmg} damage to ${target.name}`;
                 addTotalDamage(dmg + rightdmg + leftdmg);
@@ -1099,7 +1101,7 @@ class Yanqing extends Character {
                 spmax = 5;
                 if (sp < spmax) {
                     sp = Math.min(sp + 2, spmax);
-                    document.getElementById("currentsp").innerText = sp;
+                    currentsp.innerText = sp;
                 }
                 document.getElementById("dmgtext").innerText = `${this.name} dealt ${dmg} damage to ${target.name}`;
                 addTotalDamage(dmg);
@@ -1115,25 +1117,26 @@ class Yanqing extends Character {
                 modifier3: 1.5,
                 modifier4: 2.5,
                 sfx: new Audio("ice-freezing-445024.mp3"),
-                execute: (targets) => {
+                execute: async (targets) => {
                     showNotification("");
                     if (sp != 0) {
+                        document.dispatchEvent(new CustomEvent("skillUsed"));
                         basicAtkButton.disabled = true;
                         const target = targets[0];
                         this.basic.sfx.play();
                         let dmg = 0;
                         if (this.skillStacks === 0 || this.skillStacks === 1) {
                             dmg = dealDamage(this, target, this.skill.modifier1);
-                            energyGain(this, 10);
+
                         } else if (this.skillStacks === 2 || this.skillStacks === 3) {
                             dmg = dealDamage(this, target, this.skill.modifier2);
-                            energyGain(this, 10);
+
                         } else if (this.skillStacks === 4) {
                             dmg = dealDamage(this, target, this.skill.modifier3);
-                            energyGain(this, 15);
+
                         } else if (this.skillStacks >= 5) {
                             dmg = dealDamage(this, target, this.skill.modifier4);
-                            energyGain(this, 20);
+
                         }
                         this.skillStacks += 1;
                         takeDamage(target, dmg);
@@ -1151,19 +1154,25 @@ class Yanqing extends Character {
                         }
 
                         energyGain(this, 10);
-                        enablePlayerButtons();
+                        enablePlayerButtons(currentTurn);
+                        checkEnemyBreaks();
                         sp -= 1;
-                        if (sp == 0) {
-                            sp = 1,
-                                endSkill(),
-                                spmax = 5,
-                                this.skillStacks = 0;
-                            showNotification("Yanqing has run out of steam!");
-                        }
-                        document.getElementById("currentsp").innerText = sp;
+                        console.log(sp);
+                        currentsp.innerText = sp;
+                    } else {
+                        sp = 0,
+                            currentsp.innerText = sp;
+                        endSkill(),
+                            spmax = 5,
+                            maxsp.innertext = spmax,
+                            this.skillStacks = 0;
+
+                        showNotification("Yanqing has run out of steam!");
+                        await sleep(1000);
+                        checkUpdateEnd();
+                        currentsp.innerText = sp;
                         document.getElementById("dmgtext").innerText = `${this.name} dealt ${dmg} damage to ${target.name}`;
                         addTotalDamage(dmg);
-
                     }
                 },
             },
@@ -1176,11 +1185,13 @@ class Yanqing extends Character {
                     if (this.resource >= this.resourcemax) {
                         flashUltimate(this);
                         spmax = 8;
+                        maxsp.innertext = spmax;
                         this.speed *= 1.25;
                         this.defignore *= 1.25;
                         applyBuff(this, "Swift as the Wind", this);
                         applyBuff(this, "Destructive as Lightning", this);
                         sp = Math.min(sp + 3, spmax);
+                        currentsp.innerText = sp;
                         this.resource = 5;
                         updateCharacterStats();
                         showEffects();
@@ -1239,7 +1250,7 @@ class Tribios extends Character {
                 energyGain(this, 10);
                 if (sp < spmax) {
                     sp += 1;
-                    document.getElementById("currentsp").innerText = sp;
+                    currentsp.innerText = sp;
                 }
                 addTotalDamage(dmg);
                 endBasic();
@@ -1875,7 +1886,7 @@ function generateEnemies(level, database) {
 function generatePureFiction(level) {
     enemyList.length = 0;
 
-    for (let i = 0; i <= 5; i++) {
+    for (let i = 0; i < 5; i++) {
         const EnemyType = normalEnemies[Math.floor(Math.random() * normalEnemies.length)];
         const enemy = new EnemyType(level);
         enemyList.push(enemy);
@@ -2370,9 +2381,9 @@ async function start() {
     basicAtkButton.style.display = "inline-block";
     skillButton.style.display = "inline-block";
     ultimateButton.style.display = "inline-block";
-    skillpointscurrentdisplay.style.display = "inline-block";
+    currentsp.style.display = "inline-block";
     spdivider.style.display = "inline-block";
-    skillpointmaxdisplay.style.display = "inline-block";
+    maxsp.style.display = "inline-block";
     const elements = document.querySelectorAll(".character-stats");
     elements.forEach(el => {
         el.style.backgroundColor = "rgba(0,0,0,0.3)";
@@ -2453,22 +2464,22 @@ ultimateButton.onclick = () => {
 
 async function spawnMinions(bossLevel, count, enemyTypes) {
     while (enemyList.length < 5) {
-    for (let i = 0; i < count; i++) {
-        const EnemyType = enemyTypes[Math.floor(Math.random() * enemyTypes.length)];
-        const minion = new EnemyType(bossLevel);
-        enemyList.push(minion);
-        playSummonSound(minion);
+        for (let i = 0; i < count; i++) {
+            const EnemyType = enemyTypes[Math.floor(Math.random() * enemyTypes.length)];
+            const minion = new EnemyType(bossLevel);
+            enemyList.push(minion);
+            playSummonSound(minion);
+            updateEnemyStats();
+            setImages();
+            await sleep(750);
+        }
+
+        const bossObj = enemyList.splice(0, 1)[0];
+
+        const middleIndex = Math.floor(enemyList.length / 2);
+        enemyList.splice(middleIndex, 0, bossObj);
         updateEnemyStats();
-        setImages();
-        await sleep(750);
     }
-
-    const bossObj = enemyList.splice(0, 1)[0];
-
-    const middleIndex = Math.floor(enemyList.length / 2);
-    enemyList.splice(middleIndex, 0, bossObj);
-    updateEnemyStats();
-}
 }
 
 function playSummonSound(unit) {
@@ -2492,14 +2503,13 @@ function checkEndCombat() {
         basicAtkButton.style.display = "none";
         skillButton.style.display = "none";
         ultimateButton.style.display = "none";
-        skillpointscurrentdisplay.style.display = "none";
+        currentsp.style.display = "none";
         spdivider.style.display = "none";
-        skillpointmaxdisplay.style.display = "none";
+        maxsp.style.display = "none";
         removeWeaknessDisplay();
         combatOngoing = false;
         enemyPoints = 0;
         startButton.textContent = "NEXT CHALLENGE";
-        victoryPoints++;
         return;
 
     }
@@ -2517,9 +2527,9 @@ function checkEndCombat() {
         basicAtkButton.style.display = "none";
         skillButton.style.display = "none";
         ultimateButton.style.display = "none";
-        skillpointscurrentdisplay.style.display = "none";
+        currentsp.style.display = "none";
         spdivider.style.display = "none";
-        skillpointmaxdisplay.style.display = "none";
+        maxsp.style.display = "none";
         removeWeaknessDisplay();
         combatOngoing = false;
         enemyPoints = 0;
@@ -2650,16 +2660,12 @@ function initializeTurnOrder(characterList, enemyList) {
 }
 
 function endTurn() {
-
-    document.getElementById("basicatkbutton").disabled = true;
-    document.getElementById("skillbutton").disabled = true;
-    document.getElementById("ultimatebutton").disabled = true;
+    disablePlayerButtons();
     checkDeath();
     updateEnemyStats();
     updateCharacterStats();
     checkEndCombat();
     if (combatOngoing) {
-        turnOrderCheck++;
         checkTurnOrder();
     }
 }
@@ -2668,25 +2674,20 @@ async function checkTurnOrder() {
     if (!combatOngoing) return;
 
     currentTurn = getNextTurnUnit();
-    document.dispatchEvent(new CustomEvent("turnStart"))
     if (!currentTurn) return;
 
+    document.dispatchEvent(new CustomEvent("turnStart"));
     highlightCurrentUnit(currentTurn);
-
     checkEndCombat();
     if (!combatOngoing) return;
 
-    document.getElementById("infotext").textContent =
-        `It's ${currentTurn.name}'s turn!`;
+    document.getElementById("infotext").textContent = `It's ${currentTurn.name}'s turn!`;
 
     if (enemyList.includes(currentTurn)) {
         await handleEnemyTurn(currentTurn);
     } else {
         await handlePlayerTurn(currentTurn);
     }
-
-    await sleep(100);
-    finalizeTurn();
 }
 
 function getNextTurnUnit() {
@@ -2696,7 +2697,6 @@ function getNextTurnUnit() {
     if (priorityQueue.length > 0) {
         return priorityQueue.shift();
     }
-
 
     if (turnOrderCheck >= turnOrder.length) {
         turnOrderCheck = 0;
@@ -2708,13 +2708,12 @@ function getNextTurnUnit() {
 }
 
 function clearActiveTurn() {
-    characterList.forEach((_, i) =>
-        document.getElementById(`char${i + 1}`)?.classList.remove("active-turn")
-    );
-
-    enemyList.forEach((_, i) =>
-        document.getElementById(`enemy${i + 1}`)?.classList.remove("active-turn")
-    );
+    characterList.forEach((_, i) => {
+        document.getElementById(`char${i + 1}`)?.classList.remove("active-turn");
+    });
+    enemyList.forEach((_, i) => {
+        document.getElementById(`enemy${i + 1}`)?.classList.remove("active-turn");
+    });
 }
 
 function highlightCurrentUnit(unit) {
@@ -2733,12 +2732,9 @@ function highlightCurrentUnit(unit) {
 }
 
 async function handleEnemyTurn(unit) {
-    disablePlayerButtons();
-
     await sleep(1000);
     await unit.onTurn();
     await sleep(750);
-
     endTurn();
 }
 
@@ -2750,19 +2746,17 @@ function disablePlayerButtons() {
 
 function enablePlayerButtons(unit) {
     document.getElementById("basicatkbutton").disabled = false;
-    document.getElementById("skillbutton").disabled = sp > 0 ? false : true;
-    document.getElementById("ultimatebutton").disabled = unit.resource < unit.resourcemax ? true : false;
+    document.getElementById("skillbutton").disabled = sp <= 0;
+    document.getElementById("ultimatebutton").disabled = unit.resource < unit.resourcemax;
 }
 
 async function handlePlayerTurn(unit) {
     await sleep(1000);
-
     energyGain(unit, 5);
     resolveBuffsandDebuffs(unit);
 
     if (unit.currentHP === 0) {
-        document.getElementById("infotext").textContent =
-            `${unit.name} is downed!`;
+        document.getElementById("infotext").textContent = `${unit.name} is downed!`;
         await sleep(500);
         endTurn();
         return;
@@ -2770,24 +2764,18 @@ async function handlePlayerTurn(unit) {
 
     targetEnemies();
     targetAllies();
-
     await sleep(1000);
-
     enablePlayerButtons(unit);
     setTooltipAbilities(unit);
 }
 
-function finalizeTurn() {
-    checkDeath();
-    updateEnemyStats();
-    updateCharacterStats();
-}
-
 function setTooltipAbilities(currentUnit) {
-
-    document.getElementById("basicatkbutton").title = `${currentUnit.basic.name}: ${currentUnit.basic.description}`;
-    document.getElementById("skillbutton").title = `${currentUnit.skill.name}: ${currentUnit.skill.description}`;
-    document.getElementById("ultimatebutton").title = `${currentUnit.ultimate.name}: ${currentUnit.ultimate.description}`;
+    document.getElementById("basicatkbutton").title =
+        `${currentUnit.basic.name}: ${currentUnit.basic.description}`;
+    document.getElementById("skillbutton").title =
+        `${currentUnit.skill.name}: ${currentUnit.skill.description}`;
+    document.getElementById("ultimatebutton").title =
+        `${currentUnit.ultimate.name}: ${currentUnit.ultimate.description}`;
 }
 
 function setTurnIndicator() {
@@ -2835,7 +2823,7 @@ function startSkill() {
 function endSkill() {
     if (sp != 0) {
         sp--;
-        document.getElementById("currentsp").innerText = sp;
+        currentsp.innerText = sp;
         sleep(200);
         document.dispatchEvent(new CustomEvent("skillUsed"));
         checkUpdateEnd();
@@ -2873,6 +2861,13 @@ function checkUpdateEnd() {
     endTurn();
 }
 
+function addVictoryPoints(points) {
+    victoryPointsText.style.display = "inline-block";
+    victoryPointsDisplay.style.display = "inline-block";
+    victoryPoints += points;
+    victoryPointsDisplay.innerText = victoryPoints;
+}
+
 function checkDeath() {
     if (currentTurn.currentHP <= 0) {
         if (combatOngoing) {
@@ -2883,6 +2878,9 @@ function checkDeath() {
     for (let i = enemyList.length - 1; i >= 0; i--) {
         if (!enemyList[i].isAlive) {
             enemyList.splice(i, 1);
+            if (selectedGameMode == "Pure Fiction") {
+                addVictoryPoints(1);
+            }
         }
     }
 

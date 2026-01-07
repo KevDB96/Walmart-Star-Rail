@@ -9,6 +9,17 @@
     height: 30px;
 }
 
+#gameMode {
+    position: fixed;
+    top: 70px;
+    left: 10px;
+    display: flex;
+    flex-direction: row;
+    gap: 10px;
+    font-size: large;
+    z-index: 1000;
+}
+
 #gameInfo {
     position: fixed;
     top: 10px;
