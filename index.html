@@ -25,6 +25,12 @@
                 </div>
                 <button id="changeMusic">Random Song</button>
         </div>
+
+         <div id="gameMode">
+                <p id="gameModeText">Game Mode:</p>
+                <p id="gameModeSelected">None</p>
+        </div>
+
         <div id="gameInfo">
                 <div id="difficultyIndicator">
                         <p id="difficultyIndicatorText"></p>
@@ -37,7 +43,6 @@
         </div>
 
         <div id="characterSelect">
-
         </div>
 
         <p id="totaldamage"></p>
@@ -171,6 +176,15 @@
                 <div id="startMenu">
                         <button id="start">Start</button>
                         <input id="difficulty" placeholder="Enter difficulty level" type="number">
+                        <div id="modeSelect">
+                                <button class="modeButton" id="pureFictionButton"
+                                        title="Fight waves of enemies and earn points for every enemy defeated.">Pure
+                                        Fiction</button>
+                                <button class="modeButton" id="apocalypticShadowsButton" title="Fight one of the many bosses.">Apocalyptic
+                                        Shadows</button>
+                                <button class="modeButton" id="memoryofChaosButton" title="Fight a set of randomized enemies">Memory
+                                        of Chaos</button>
+                        </div>
                 </div>
                 <div id="abilities">
                         <div class="buttons">
